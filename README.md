@@ -1,2 +1,2 @@
-# seat-booking-demo
-Demonstration of a seat booking facility using Multi-Record Trasnactions
+# seat-reservation-demo
+Demonstration of a seat reservation facility using Multi-Record Trasnactions
