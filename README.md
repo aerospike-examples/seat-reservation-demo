@@ -16,3 +16,5 @@ In the `config` directory, there is an `install.sh` script. This performs 2 acti
 
 Once this has been executed, put a valid `features.conf` with the needed feature support into the `config` directory and execute `run_server_mrt.sh` to start a docker process with the server.
 
+## Note
+There is a 113GB file under `node/` called `node` which is an implementation of node js version 22. This is too big to check into github.
