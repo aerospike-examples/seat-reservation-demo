@@ -18,16 +18,24 @@ import com.aerospike.client.policy.WritePolicy;
 public class AerospikeController {
     @GetMapping("/demo/api/getDatabases") 
     public String getDatabases() {
-        IAerospikeClient client = new AerospikeClient("localhost", 3000);
-        
-        Txn tran = new Txn();
-        WritePolicy wp = new WritePolicy();
-        wp.txn = tran;
-        client.put(wp, new Key("test", "testSet", 123), new Bin("name", "value"));
-        client.put(wp, new Key("test", "testSet", 456), new Bin("age", 37));
-        client.commit(tran);
-        client.close();
-        return "Success";
+        try (IAerospikeClient client = new AerospikeClient("localhost", 3000)) {
+            Txn tran = new Txn();
+            try {
+//                WritePolicy wp = client.copyWritePolicyDefault();
+                WritePolicy wp = new WritePolicy();
+                wp.txn = tran;
+                
+                System.out.printf("Begin txn %d\n", wp.txn.getId());
+                client.put(wp, new Key("test", "testSet", 123), new Bin("name", "value"));
+                client.put(wp, new Key("test", "testSet", 456), new Bin("age", 37));
+                client.commit(tran);
+                return "Success";
+            }
+            catch (Exception e) {
+                client.abort(tran);
+                throw e;
+            }
+        }
     }
 
     @GetMapping("/tmp/testTxn")
