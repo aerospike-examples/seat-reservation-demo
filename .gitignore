@@ -2,6 +2,7 @@
 config/features.conf
 target/**
 node_modules/
+.classpath
 
 # Compiled class file
 *.class
@@ -88,4 +89,21 @@ local.properties
 # Uncomment this line if you wish to ignore the project description file.
 # Typically, this file would be tracked if it contains build/dependency configurations:
 #.project
+
+##############################
+## Eclipse
+##############################
+.settings/
+bin/
+tmp/
+.metadata
+.classpath
+.project
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
 
