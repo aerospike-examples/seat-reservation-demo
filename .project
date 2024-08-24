@@ -25,8 +25,6 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.m2e.core.maven2Nature</nature>
 	</natures>
-<<<<<<< HEAD
-=======
 	<filteredResources>
 		<filter>
 			<id>1724455808144</id>
@@ -38,5 +36,4 @@
 			</matcher>
 		</filter>
 	</filteredResources>
->>>>>>> ec-add-mrt-snapshot-releases
 </projectDescription>
