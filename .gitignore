@@ -1,6 +1,6 @@
 # Ignore the features.conf file. This needs to be a formal one with vector db in it
 config/features.conf
-
+target/**
 node_modules/
 
 # Compiled class file
