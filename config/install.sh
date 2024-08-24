@@ -4,5 +4,5 @@
 # mvn install:install-file -Dfile=./aerospike-client-jdk21-8.1.2.jar -Dsources=./aerospike-client-jdk21-8.1.2-sources.jar -DgroupId=com.aerospike -DartifactId=aerospike-client -Dversion=8.1.2 -Dpackaging=jar -DgeenratePom=true
 
 # Pull the latest RC candidate for docker
-docker pull aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:7.2.0.0-start-186-g63ddfc6
+docker pull aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:latest
 
