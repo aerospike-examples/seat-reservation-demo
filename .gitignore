@@ -90,8 +90,6 @@ local.properties
 # Typically, this file would be tracked if it contains build/dependency configurations:
 #.project
 
-<<<<<<< HEAD
-=======
 ### Spring Boot ###
 HELP.md
 target/
@@ -111,4 +109,3 @@ target/
 ### Application Properties ###
 application*.properties
 application*.yml
->>>>>>> ec-add-mrt-snapshot-releases
