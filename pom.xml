@@ -16,6 +16,13 @@
 	<licenses>
 		<license />
 	</licenses>
+	<repositories>
+		<repository>
+			<id>aerospike-jfrog</id>
+			<name>aerospike-maven-dev</name>
+			<url>https://aerospike.jfrog.io/artifactory/aerospike-maven-dev</url>
+		</repository>
+	</repositories>
 	<developers>
 		<developer />
 	</developers>
@@ -31,8 +38,8 @@
 	<dependencies>
 	<dependency>
 		<groupId>com.aerospike</groupId>
-		<artifactId>aerospike-client</artifactId>
-		<version>8.1.2</version>
+		<artifactId>aerospike-client-jdk21</artifactId>
+		<version>9.0.0-SNAPSHOT</version>
 	</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -1,6 +1,10 @@
 # Ignore the features.conf file. This needs to be a formal one with vector db in it
 config/features.conf
 
+<<<<<<< HEAD
+=======
+node/
+>>>>>>> ec-add-mrt-snapshot-releases
 node_modules/
 
 # Compiled class file
@@ -89,3 +93,25 @@ local.properties
 # Typically, this file would be tracked if it contains build/dependency configurations:
 #.project
 
+<<<<<<< HEAD
+=======
+### Spring Boot ###
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+### Application Properties ###
+application*.properties
+application*.yml
+>>>>>>> ec-add-mrt-snapshot-releases
