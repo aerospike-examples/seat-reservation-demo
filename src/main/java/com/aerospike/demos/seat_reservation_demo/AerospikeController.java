@@ -1,5 +1,9 @@
 package com.aerospike.demos.seat_reservation_demo;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,10 +16,41 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Txn;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.demos.seat_reservation_demo.model.SeatStatus;
+import com.aerospike.demos.seat_reservation_demo.services.EventService;
 
 @Controller
 @RestController
 public class AerospikeController {
+    @Autowired
+    private EventService eventService;
+    
+    @GetMapping("/demo/loadEvents")
+    public String loadEvents() {
+        // TODO: Move this from an absolute path
+        File file = new File("/Users/tfaulkes/Programming/Aerospike/git/seat-reservation-demo/data/ticketmaster_events_2023-08-02.json");
+        try {
+            eventService.loadData(file);
+            return "Success";
+        }
+        catch (IOException | InterruptedException ioe) {
+            System.err.printf("Error loading data from file %s: %s (%s)", file.getAbsoluteFile(), ioe.getMessage(), ioe.getClass());
+            ioe.printStackTrace();
+            return "Failed";
+        }
+    }
+    
+    @GetMapping("test")
+    public String test() {
+        String eventId = "testEvent";
+        eventService.setSeatStatus(eventId, 12345, 10, 48, SeatStatus.RESERVED, null);
+        eventService.setSeatStatus(eventId, 12345, 10, 49, SeatStatus.RESERVED, null);
+        eventService.setSeatStatus(eventId, 12345, 10, 50, SeatStatus.RESERVED, null);
+        eventService.setSeatStatus(eventId, 12345, 10, 50, SeatStatus.PURCHASED, null);
+        eventService.setSeatStatus(eventId, 12345, 10, 50, SeatStatus.AVAILABLE, null);
+        return "Done";
+    }
+    
     @GetMapping("/demo/api/getDatabases") 
     public String getDatabases() {
         try (IAerospikeClient client = new AerospikeClient("localhost", 3000)) {
