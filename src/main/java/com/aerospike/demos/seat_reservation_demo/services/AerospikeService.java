@@ -3,8 +3,10 @@ package com.aerospike.demos.seat_reservation_demo.services;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Bin;
 import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Key;
+import com.aerospike.client.Record;
 import com.aerospike.client.Txn;
 import com.aerospike.client.Value;
 import com.aerospike.client.cdt.CTX;
@@ -29,8 +32,12 @@ import com.aerospike.client.exp.ExpOperation;
 import com.aerospike.client.exp.ExpWriteFlags;
 import com.aerospike.client.exp.ListExp;
 import com.aerospike.client.exp.MapExp;
+import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.demos.seat_reservation_demo.model.Booking;
+import com.aerospike.demos.seat_reservation_demo.model.Booking.Status;
 import com.aerospike.demos.seat_reservation_demo.model.Event;
+import com.aerospike.demos.seat_reservation_demo.model.Seat;
 import com.aerospike.demos.seat_reservation_demo.model.SeatStatus;
 import com.aerospike.demos.seat_reservation_demo.model.Venue;
 
@@ -44,9 +51,9 @@ public class AerospikeService {
     
     public static final String CUSTOMER_SET = "customer";
     public static final String EVENT_SET = "event";
-    public static final String SEAT_SET = "seat";
     public static final String VENUE_SET = "venue";
     public static final String EVENT_SEAT_SET = "eventSeats";
+    public static final String BOOKING_SET = "booking";
     
     private IAerospikeClient client;
     
@@ -89,8 +96,75 @@ public class AerospikeService {
             );
     }
     
+    public Event readEvent(String id) {
+        Record thisRecord = client.get(null, new Key(NAMESPACE, EVENT_SET, id));
+        if (thisRecord == null) {
+            return null;
+        }
+        else {
+            Event result = new Event();
+            result.setCategory(thisRecord.getString("category"));
+            result.setDate(fromAerospike(thisRecord.getLong("date")));
+            result.setSubCategory(thisRecord.getString("subCat"));
+            result.setTitle(thisRecord.getString("title"));
+            result.setUrl(thisRecord.getString("url"));
+            String venueId = thisRecord.getString("venue");
+            if (venueId != null) {
+                result.setVenue(this.readVenue(venueId));
+            }
+            return result;
+        }
+    }
+
     private Key getRowOfSeatsKey(String eventId, int row) {
         return new Key(NAMESPACE, EVENT_SEAT_SET, eventId + "|" + row);
+    }
+    
+    /**
+     * Get the status of the seats for an event. The result will be an array with the number of rows in the venue,
+     * and each item in the array will be an array of the seat statuses in that row. The seat statuses will be downcast
+     * to a byte for more efficient storage
+     * <p>
+     * For for a small theater with 4 rows and 5 seats per row, the result must be something like:
+     * <pre>
+     * 0: 0 0 1 2 0
+     * 1: 2 2 2 2 0
+     * 2: 1 1 1 2 2
+     * 3: 0 0 0 0 0
+     * </pre>
+     * Here, there are 3 vacant seats in the first one, one reserved and not purchased and one purchased.
+     * See {@code SeatStatus} for a list of possible statuses. 
+     * @param event
+     * @return
+     */
+    public byte[][] getEventSeatStatus(Event event) {
+        if (event.getVenue() == null) {
+            throw new IllegalArgumentException("Event must be associated with a venue");
+        }
+        int rows = event.getVenue().getNumRows();
+        int seatsPerRow = event.getVenue().getSeatCount();
+        
+        Key[] keys = new Key[rows];
+        for (int i = 0; i < rows; i++) {
+            keys[i] = getRowOfSeatsKey(event.getId(), i);
+        }
+        Record[] records = client.get(null, keys);
+        byte[][] seatStatuses = new byte[(int)rows][];
+        for (int row = 0; row < rows; row++) {
+            seatStatuses[row] = new byte[seatsPerRow];
+            Record thisRecord = records[row];
+            if (thisRecord != null) {
+                Map<Long, Object> seatMap = (Map<Long, Object>) thisRecord.getMap("seats");
+                if (seatMap != null) {
+                    for (long thisSeat : seatMap.keySet()) {
+                        List<Object> seatData = (List<Object>) seatMap.get(thisSeat);
+                        int seatStatus = ((Long)seatData.get(0)).intValue();
+                        seatStatuses[row][(int)thisSeat] = (byte)seatStatus;
+                    }
+                }
+            }
+        }
+        return seatStatuses;
     }
     
     /**
@@ -204,7 +278,84 @@ public class AerospikeService {
                 new Bin("desc", venue.getDescription()),
                 new Bin("name", venue.getName()),
                 new Bin("postCode", venue.getPostalCode()),
-                new Bin("seatCount", venue.getSeatCount())
+                new Bin("seatCount", venue.getSeatCount()),
+                new Bin("numRows", venue.getNumRows())
             );
+    }
+    
+    public Venue readVenue(String id) {
+        Record thisRecord = client.get(null, new Key(NAMESPACE, VENUE_SET, id));
+        if (thisRecord == null) {
+            return null;
+        }
+        else {
+            Venue result = new Venue();
+            result.setAddress(thisRecord.getString("address"));
+            result.setCity(thisRecord.getString("city"));
+            result.setCountry(thisRecord.getString("country"));
+            result.setDescription(thisRecord.getString("desc"));
+            result.setName(thisRecord.getString("name"));
+            result.setId(id);
+            result.setPostalCode(thisRecord.getString("postCode"));
+            result.setSeatCount(thisRecord.getInt("seatCount"));
+            result.setNumRows(thisRecord.getInt("numRows"));
+            return result;
+        }
+    }
+    
+    /**
+     * Save a booking. 
+     * @param wp
+     * @param booking
+     * @param txn
+     */
+    public void save(WritePolicy wp, Booking booking, Txn txn) {
+        if (wp == null && txn != null) {
+            wp = client.copyWritePolicyDefault();
+            wp.txn = txn;
+        }
+        Key key = new Key(NAMESPACE, BOOKING_SET, booking.getId());
+        List<String> seats = new ArrayList<>(booking.getSeats().size());
+        for (Seat thisSeat: booking.getSeats()) {
+            seats.add(thisSeat.getRow() + "-" + thisSeat.getSeatNumber());
+        }
+        client.put(wp, key, 
+                new Bin("created", toAerospike(booking.getCreated())),
+                new Bin("custId", booking.getCustId()),
+                new Bin("eventId", booking.getEventId()),
+                new Bin("status", booking.getStatus().toString()),
+                new Bin("seats", seats)
+            );
+    }
+    
+    public Booking loadBooking(Policy policy, String bookingId) {
+        Record thisRecord = client.get(policy, new Key(NAMESPACE, BOOKING_SET, bookingId));
+        if (thisRecord == null) {
+            return null;
+        }
+        else {
+            Booking result = new Booking();
+            result.setCreated(fromAerospike(thisRecord.getLong("created")));
+            result.setCustId(thisRecord.getLong("custId"));
+            result.setEventId(thisRecord.getString("eventId"));
+            result.setStatus(Status.valueOf(thisRecord.getString("status")));
+            List<String> seatList = (List<String>) thisRecord.getList("seats");
+            Set<Seat> seats = new HashSet<>();
+            for (String thisSeatStr : seatList) {
+                String[] parts = thisSeatStr.split("-");
+                Seat seat = new Seat(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+                seats.add(seat);
+            }
+            result.setSeats(seats);
+            return result;
+        }
+    }
+    
+    public void commitTxn(Txn txn) {
+        this.client.commit(txn);
+    }
+    
+    public void rollbackTxn(Txn txn) {
+        this.client.abort(txn);
     }
 }

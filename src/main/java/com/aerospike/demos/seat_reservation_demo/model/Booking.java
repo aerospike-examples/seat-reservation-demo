@@ -1,7 +1,8 @@
 package com.aerospike.demos.seat_reservation_demo.model;
 
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import lombok.Data;
 
@@ -12,10 +13,10 @@ public class Booking {
         PENDING,
         PURCHASED
     }
-    
+    private String id;
     private String eventId;
     private long custId;
     private Status status = Status.PENDING;
-    private List<Seat> seats;
+    private Set<Seat> seats = new HashSet<>();
     private Date created;
 }

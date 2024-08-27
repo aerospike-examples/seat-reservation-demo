@@ -1,7 +1,9 @@
 package com.aerospike.demos.seat_reservation_demo;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,15 +28,19 @@ public class AerospikeController {
     private EventService eventService;
     
     @GetMapping("/demo/loadEvents")
-    public String loadEvents() {
-        // TODO: Move this from an absolute path
-        File file = new File("/Users/tfaulkes/Programming/Aerospike/git/seat-reservation-demo/data/ticketmaster_events_2023-08-02.json");
+    public String loadEvents() throws IOException {
+        Enumeration<URL> resources = ClassLoader.getSystemClassLoader().getResources("");
+        while (resources.hasMoreElements()) {
+            URL element = resources.nextElement();
+            System.out.println(element);
+        }
+        InputStream is = getClass().getResourceAsStream("/data/ticketmaster_events_2023-08-02.json");
         try {
-            eventService.loadData(file);
+            eventService.loadEventAndVenueData(is);
             return "Success";
         }
         catch (IOException | InterruptedException ioe) {
-            System.err.printf("Error loading data from file %s: %s (%s)", file.getAbsoluteFile(), ioe.getMessage(), ioe.getClass());
+            System.err.printf("Error loading data from file %s: %s (%s)", "data/ticketmaster_events_2023.json", ioe.getMessage(), ioe.getClass());
             ioe.printStackTrace();
             return "Failed";
         }
