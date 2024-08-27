@@ -1,9 +1,10 @@
 package com.aerospike.demos.seat_reservation_demo.services;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -71,9 +72,9 @@ public class EventService {
         return true;
     }
     
-    public void loadData(File file) throws IOException, InterruptedException {
+    public void loadEventAndVenueData(InputStream stream) throws IOException, InterruptedException {
         Gson gson = new Gson();
-        try (Reader reader = new BufferedReader(new FileReader(file))) {
+        try (Reader reader = new BufferedReader(new InputStreamReader(stream))) {
             List<Map<String, String>> eventList = gson.fromJson(reader, List.class);
             final AtomicInteger nextEvent = new AtomicInteger(eventList.size());
             final AtomicInteger saveSuccessful = new AtomicInteger();
@@ -99,12 +100,20 @@ public class EventService {
             service.awaitTermination(1, TimeUnit.DAYS);
         }
     }
-    
-    public void createNewEvent(Event event) {
+
+    public byte[][] getAvailableSeats(Event event) {
+        return aerospikeService.getEventSeatStatus(event);
+    }
+
+    public void saveEvent(Event event) {
         if (event.getVenue() == null) {
             throw new IllegalArgumentException("Event must be associated with a venue");
         }
         aerospikeService.save(null, event, null);
+    }
+    
+    public Event loadEvent(String eventId) {
+        return aerospikeService.readEvent(eventId);
     }
     
     public void setSeatStatus(String eventId, long custId, int row, int seatNumber, SeatStatus newStatus, Txn txn) {
