@@ -3,6 +3,8 @@ docker run --rm -tid -d -v `pwd`:/etc/aerospike/ -e "FEATURE_KEY_FILE=/etc/aeros
 
 echo "Docker container created, setting the roster..."
 sleep 3
+echo "Setting roster"
 ./set_roster.sh
-
+echo "Creating indexes"
+asadm --enable -e "manage sindex create numeric date_idx ns test set event bin date"
 echo "Done!"

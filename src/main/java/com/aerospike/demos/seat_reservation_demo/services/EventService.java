@@ -119,4 +119,8 @@ public class EventService {
     public void setSeatStatus(String eventId, long custId, int row, int seatNumber, SeatStatus newStatus, Txn txn) {
         aerospikeService.setSeatStatus(eventId, custId, row, seatNumber, newStatus, txn);
     }
+    
+    public List<Event> getEventsInDateRange(Date startDate, Date endDate) {
+        return aerospikeService.getEventsInDateRange(startDate, endDate);
+    }
 }

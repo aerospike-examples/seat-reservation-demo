@@ -33,7 +33,11 @@ import com.aerospike.client.exp.ExpWriteFlags;
 import com.aerospike.client.exp.ListExp;
 import com.aerospike.client.exp.MapExp;
 import com.aerospike.client.policy.Policy;
+import com.aerospike.client.policy.QueryPolicy;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.client.query.Filter;
+import com.aerospike.client.query.RecordSet;
+import com.aerospike.client.query.Statement;
 import com.aerospike.demos.seat_reservation_demo.model.Customer;
 import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
@@ -111,8 +115,7 @@ public class AerospikeService {
             );
     }
     
-    public Event readEvent(String id) {
-        Record thisRecord = client.get(null, new Key(NAMESPACE, EVENT_SET, id));
+    private Event eventFromRecord(Record thisRecord, boolean loadVenue) {
         if (thisRecord == null) {
             return null;
         }
@@ -123,14 +126,36 @@ public class AerospikeService {
             result.setSubCategory(thisRecord.getString("subCat"));
             result.setTitle(thisRecord.getString("title"));
             result.setUrl(thisRecord.getString("url"));
-            String venueId = thisRecord.getString("venue");
-            if (venueId != null) {
-                result.setVenue(this.readVenue(venueId));
+            if (loadVenue) {
+                String venueId = thisRecord.getString("venue");
+                if (venueId != null) {
+                    result.setVenue(this.readVenue(venueId));
+                }
             }
             return result;
         }
     }
+    public Event readEvent(String id) {
+        Record thisRecord = client.get(null, new Key(NAMESPACE, EVENT_SET, id));
+        return eventFromRecord(thisRecord, true);
+    }
 
+    public List<Event> getEventsInDateRange(Date startDate, Date endDate) {
+        Statement stmt = new Statement();
+        stmt.setNamespace(NAMESPACE);
+        stmt.setSetName(EVENT_SET);
+        stmt.setFilter(Filter.range("date", toAerospike(startDate), toAerospike(endDate)));
+        QueryPolicy qp = new QueryPolicy();
+        RecordSet recordSet = client.query(qp, stmt);
+        List<Event> results = new ArrayList<>();
+        while (recordSet.next()) {
+            Record thisRecord = recordSet.getRecord();
+            results.add(eventFromRecord(thisRecord, false));
+        }
+        results.sort((a,b) -> (int)(a.getDate().getTime() - b.getDate().getTime()));
+        return results;
+    }
+    
     private Key getRowOfSeatsKey(String eventId, int row) {
         return new Key(NAMESPACE, EVENT_SEAT_SET, eventId + "|" + row);
     }
