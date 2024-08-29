@@ -8,11 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.aerospike.demos.seat_reservation_demo.model.Booking;
-import com.aerospike.demos.seat_reservation_demo.model.Booking.Status;
 import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
 import com.aerospike.demos.seat_reservation_demo.model.Venue;
-import com.aerospike.demos.seat_reservation_demo.services.BookingService;
+import com.aerospike.demos.seat_reservation_demo.services.ShoppingCartService;
 import com.aerospike.demos.seat_reservation_demo.services.EventService;
 import com.aerospike.demos.seat_reservation_demo.services.VenueService;
 
@@ -25,7 +24,7 @@ public class EventServiceTest {
     private VenueService venueService;
     
     @Autowired
-    private BookingService bookingService;
+    private ShoppingCartService bookingService;
     
     private void printSeatMap(byte[][] data) {
         for (int row = 0; row < data.length; row++) {

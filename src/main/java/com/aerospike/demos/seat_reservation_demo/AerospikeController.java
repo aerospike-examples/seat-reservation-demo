@@ -3,11 +3,18 @@ package com.aerospike.demos.seat_reservation_demo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aerospike.client.AerospikeClient;
@@ -18,6 +25,7 @@ import com.aerospike.client.Record;
 import com.aerospike.client.Txn;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.WritePolicy;
+import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.SeatStatus;
 import com.aerospike.demos.seat_reservation_demo.services.EventService;
 
@@ -44,6 +52,29 @@ public class AerospikeController {
             ioe.printStackTrace();
             return "Failed";
         }
+    }
+    
+    @PutMapping(path = "/demo/event/save", 
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Boolean> saveEvent(@RequestBody Event event) {
+        try {
+            eventService.saveEvent(event);
+            return ResponseEntity.ok(true);
+        }
+        catch (Exception e) {
+            return ResponseEntity.internalServerError().body(false);
+        }
+    }
+    
+    @GetMapping("/demo/eventsInDateRange/{startDate}/{endDate}")
+    public List<Event> getEventsInDateRange(
+            @PathVariable(name = "startDate") long startDate, 
+            @PathVariable(name = "endDate") long endDate) {
+        
+        return eventService.getEventsInDateRange(
+                startDate == 0 ? null : new Date(startDate), 
+                endDate == 0 ? null : new Date(endDate));
     }
     
     @GetMapping("test")
