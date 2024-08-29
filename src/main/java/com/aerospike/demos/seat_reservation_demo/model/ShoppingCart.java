@@ -7,7 +7,7 @@ import java.util.Set;
 import lombok.Data;
 
 @Data
-public class Booking {
+public class ShoppingCart {
     
     public enum Status {
         PENDING,

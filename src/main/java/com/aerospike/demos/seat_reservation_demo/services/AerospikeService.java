@@ -34,11 +34,12 @@ import com.aerospike.client.exp.ListExp;
 import com.aerospike.client.exp.MapExp;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.WritePolicy;
-import com.aerospike.demos.seat_reservation_demo.model.Booking;
-import com.aerospike.demos.seat_reservation_demo.model.Booking.Status;
+import com.aerospike.demos.seat_reservation_demo.model.Customer;
 import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
 import com.aerospike.demos.seat_reservation_demo.model.SeatStatus;
+import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart;
+import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart.Status;
 import com.aerospike.demos.seat_reservation_demo.model.Venue;
 
 import jakarta.annotation.PostConstruct;
@@ -53,7 +54,7 @@ public class AerospikeService {
     public static final String EVENT_SET = "event";
     public static final String VENUE_SET = "venue";
     public static final String EVENT_SEAT_SET = "eventSeats";
-    public static final String BOOKING_SET = "booking";
+    public static final String SHOPPING_CART_SET = "cart";
     
     private IAerospikeClient client;
     
@@ -93,6 +94,20 @@ public class AerospikeService {
                 new Bin("venue", event.getVenue() == null ? "" : event.getVenue().getId()),
                 new Bin("title", event.getTitle()),
                 new Bin("url", event.getUrl())
+            );
+    }
+    
+    public void save(WritePolicy wp, Customer customer, Txn txn) {
+        if (wp == null && txn != null) {
+            wp = client.copyWritePolicyDefault();
+            wp.txn = txn;
+        }
+        wp.sendKey = true;
+        Key key = new Key(NAMESPACE, CUSTOMER_SET, customer.getId());
+        client.put(wp, key, 
+                new Bin("dob", toAerospike(customer.getDateOfBirth())),
+                new Bin("firstName", customer.getFirstName()),
+                new Bin("lastName", customer.getLastName())
             );
     }
     
@@ -314,7 +329,7 @@ public class AerospikeService {
             wp = client.copyWritePolicyDefault();
             wp.txn = txn;
         }
-        Key key = new Key(NAMESPACE, BOOKING_SET, booking.getId());
+        Key key = new Key(NAMESPACE, SHOPPING_CART_SET, booking.getId());
         List<String> seats = new ArrayList<>(booking.getSeats().size());
         for (Seat thisSeat: booking.getSeats()) {
             seats.add(thisSeat.getRow() + "-" + thisSeat.getSeatNumber());
@@ -328,13 +343,13 @@ public class AerospikeService {
             );
     }
     
-    public Booking loadBooking(Policy policy, String bookingId) {
-        Record thisRecord = client.get(policy, new Key(NAMESPACE, BOOKING_SET, bookingId));
+    public ShoppingCart loadBooking(Policy policy, String bookingId) {
+        Record thisRecord = client.get(policy, new Key(NAMESPACE, SHOPPING_CART_SET, bookingId));
         if (thisRecord == null) {
             return null;
         }
         else {
-            Booking result = new Booking();
+            ShoppingCart result = new ShoppingCart();
             result.setCreated(fromAerospike(thisRecord.getLong("created")));
             result.setCustId(thisRecord.getLong("custId"));
             result.setEventId(thisRecord.getString("eventId"));
