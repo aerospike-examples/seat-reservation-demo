@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.aerospike.demos.seat_reservation_demo.model.Booking;
 import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
+import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart;
 import com.aerospike.demos.seat_reservation_demo.model.Venue;
-import com.aerospike.demos.seat_reservation_demo.services.ShoppingCartService;
 import com.aerospike.demos.seat_reservation_demo.services.EventService;
+import com.aerospike.demos.seat_reservation_demo.services.ShoppingCartService;
 import com.aerospike.demos.seat_reservation_demo.services.VenueService;
 
 @SpringBootTest
@@ -66,17 +66,17 @@ public class EventServiceTest {
         System.out.println("\n*** Seat map prior to booking ***");
         printSeatMap(eventService.getAvailableSeats(event));
         
-        Booking booking = new Booking();
-        booking.setCreated(new Date());
-        booking.setCustId(123);
-        booking.setEventId(event.getId());
-        booking.setId("1244");
+        ShoppingCart shoppingCart = new ShoppingCart();
+        shoppingCart.setCreated(new Date());
+        shoppingCart.setCustId(123);
+        shoppingCart.setEventId(event.getId());
+        shoppingCart.setId("1244");
         
-        bookingService.addSeatsToBooking(booking, new Seat(3, 8), new Seat(3, 9));
+        bookingService.addSeatsToBooking(shoppingCart, new Seat(3, 8), new Seat(3, 9));
         System.out.println("\n*** Seat map after booking two seats ***");
         printSeatMap(eventService.getAvailableSeats(event));
         
-        bookingService.purchaseBooking(booking, null);
+        bookingService.purchaseBooking(shoppingCart, null);
         System.out.println("\n*** Seat map after purchasing two seats ***");
         printSeatMap(eventService.getAvailableSeats(event));
         

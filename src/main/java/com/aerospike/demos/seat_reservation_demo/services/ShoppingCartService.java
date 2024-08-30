@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aerospike.client.Txn;
-import com.aerospike.demos.seat_reservation_demo.model.Booking;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
 import com.aerospike.demos.seat_reservation_demo.model.SeatStatus;
 import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart;

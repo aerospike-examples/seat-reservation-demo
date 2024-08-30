@@ -346,30 +346,30 @@ public class AerospikeService {
     /**
      * Save a booking. 
      * @param wp
-     * @param booking
+     * @param shoppingCart
      * @param txn
      */
-    public void save(WritePolicy wp, Booking booking, Txn txn) {
+    public void save(WritePolicy wp, ShoppingCart shoppingCart, Txn txn) {
         if (wp == null && txn != null) {
             wp = client.copyWritePolicyDefault();
             wp.txn = txn;
         }
-        Key key = new Key(NAMESPACE, SHOPPING_CART_SET, booking.getId());
-        List<String> seats = new ArrayList<>(booking.getSeats().size());
-        for (Seat thisSeat: booking.getSeats()) {
+        Key key = new Key(NAMESPACE, SHOPPING_CART_SET, shoppingCart.getId());
+        List<String> seats = new ArrayList<>(shoppingCart.getSeats().size());
+        for (Seat thisSeat: shoppingCart.getSeats()) {
             seats.add(thisSeat.getRow() + "-" + thisSeat.getSeatNumber());
         }
         client.put(wp, key, 
-                new Bin("created", toAerospike(booking.getCreated())),
-                new Bin("custId", booking.getCustId()),
-                new Bin("eventId", booking.getEventId()),
-                new Bin("status", booking.getStatus().toString()),
+                new Bin("created", toAerospike(shoppingCart.getCreated())),
+                new Bin("custId", shoppingCart.getCustId()),
+                new Bin("eventId", shoppingCart.getEventId()),
+                new Bin("status", shoppingCart.getStatus().toString()),
                 new Bin("seats", seats)
             );
     }
     
-    public ShoppingCart loadBooking(Policy policy, String bookingId) {
-        Record thisRecord = client.get(policy, new Key(NAMESPACE, SHOPPING_CART_SET, bookingId));
+    public ShoppingCart loadBooking(Policy policy, String shoppingCartId) {
+        Record thisRecord = client.get(policy, new Key(NAMESPACE, SHOPPING_CART_SET, shoppingCartId));
         if (thisRecord == null) {
             return null;
         }
