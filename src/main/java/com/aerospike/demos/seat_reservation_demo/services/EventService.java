@@ -1,7 +1,6 @@
 package com.aerospike.demos.seat_reservation_demo.services;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -40,13 +40,14 @@ public class EventService {
         if (datetime != null) {
             try {
                 Date date = iso8601.parse(datetime + "Z");
-                Event event = new Event();
-                event.setDate(date);
-                event.setUrl(data.get("event_url"));
-                event.setCategory(data.get("event_category"));
-                event.setSubCategory(data.get("event_subcategory"));
-                event.setTitle(data.get("title"));
-                event.setId(data.get("event_id"));
+                Event event = Event.builder()
+                        .date(date)
+                        .url(data.get("event_url"))
+                        .category(data.get("event_category"))
+                        .subCategory(data.get("event_subcategory"))
+                        .title(data.get("title"))
+                        .id(data.get("event_id"))
+                        .build();
                 
                 Venue venue = new Venue();
                 venue.setAddress(data.get("address"));
@@ -56,8 +57,7 @@ public class EventService {
                 venue.setId(data.get("name"));
                 venue.setName(venue.getId());
                 venue.setPostalCode(data.get("postal_code"));
-                venue.setSeatCount(5000);
-                venue.setNumRows(100);
+                venue.addMultipleIdenticalSections(12, 24, 24);
                 event.setVenue(venue);
                 
                 aerospikeService.save(null, venue, null);
@@ -67,8 +67,6 @@ public class EventService {
                 return false;
             }
         }
-        
-        ;
         return true;
     }
     
@@ -101,7 +99,7 @@ public class EventService {
         }
     }
 
-    public byte[][] getAvailableSeats(Event event) {
+    public byte[][][] getAvailableSeats(Event event) {
         return aerospikeService.getEventSeatStatus(event);
     }
 
@@ -112,15 +110,29 @@ public class EventService {
         aerospikeService.save(null, event, null);
     }
     
-    public Event loadEvent(String eventId) {
+    public Optional<Event> loadEvent(String eventId) {
         return aerospikeService.readEvent(eventId);
     }
+
+    public void setSeatStatus(String eventId, String custId, int sectionId, int row, int seatNumber, SeatStatus newStatus, Txn txn) {
+        aerospikeService.setSeatStatus(eventId, custId, sectionId, row, seatNumber, newStatus, txn);
+    }
     
-    public void setSeatStatus(String eventId, long custId, int row, int seatNumber, SeatStatus newStatus, Txn txn) {
-        aerospikeService.setSeatStatus(eventId, custId, row, seatNumber, newStatus, txn);
+    public List<Event> getAllEvents() {
+        return aerospikeService.getEventsInDateRange(new Date(0), new Date(Long.MAX_VALUE));
     }
     
     public List<Event> getEventsInDateRange(Date startDate, Date endDate) {
         return aerospikeService.getEventsInDateRange(startDate, endDate);
+    }
+    
+    /**
+     * Remove all seat reservations for an event. 
+     * @param eventId
+     */
+    public void clearAllSeats(Event event) {
+        aerospikeService.clearSeatStatusesForEvent(event);
+        // TODO: This only clears out the seat data -- if bookings are saved against a customer,
+        // we should remove these too.
     }
 }

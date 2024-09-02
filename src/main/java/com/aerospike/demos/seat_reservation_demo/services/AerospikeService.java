@@ -6,15 +6,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
 import com.aerospike.client.AerospikeClient;
+import com.aerospike.client.AerospikeException;
+import com.aerospike.client.BatchResults;
 import com.aerospike.client.Bin;
 import com.aerospike.client.IAerospikeClient;
 import com.aerospike.client.Key;
+import com.aerospike.client.Operation;
 import com.aerospike.client.Record;
+import com.aerospike.client.ResultCode;
 import com.aerospike.client.Txn;
 import com.aerospike.client.Value;
 import com.aerospike.client.cdt.CTX;
@@ -29,9 +34,12 @@ import com.aerospike.client.cdt.MapWriteFlags;
 import com.aerospike.client.exp.Exp;
 import com.aerospike.client.exp.Exp.Type;
 import com.aerospike.client.exp.ExpOperation;
+import com.aerospike.client.exp.ExpReadFlags;
 import com.aerospike.client.exp.ExpWriteFlags;
 import com.aerospike.client.exp.ListExp;
 import com.aerospike.client.exp.MapExp;
+import com.aerospike.client.policy.BatchDeletePolicy;
+import com.aerospike.client.policy.BatchPolicy;
 import com.aerospike.client.policy.Policy;
 import com.aerospike.client.policy.QueryPolicy;
 import com.aerospike.client.policy.WritePolicy;
@@ -42,6 +50,7 @@ import com.aerospike.demos.seat_reservation_demo.model.Customer;
 import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
 import com.aerospike.demos.seat_reservation_demo.model.SeatStatus;
+import com.aerospike.demos.seat_reservation_demo.model.Section;
 import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart;
 import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart.Status;
 import com.aerospike.demos.seat_reservation_demo.model.Venue;
@@ -84,6 +93,14 @@ public class AerospikeService {
         return date == 0 ? null : new Date(date);
     }
     
+    public void resetAll() {
+        client.truncate(null, NAMESPACE, CUSTOMER_SET, null);
+        client.truncate(null, NAMESPACE, EVENT_SET, null);
+        client.truncate(null, NAMESPACE, EVENT_SEAT_SET, null);
+        client.truncate(null, NAMESPACE, SHOPPING_CART_SET, null);
+        client.truncate(null, NAMESPACE, VENUE_SET, null);
+    }
+
     public void save(WritePolicy wp, Event event, Txn txn) {
         if (wp == null) {
             wp = client.copyWritePolicyDefault();
@@ -97,7 +114,8 @@ public class AerospikeService {
                 new Bin("subCat", event.getSubCategory()),
                 new Bin("venue", event.getVenue() == null ? "" : event.getVenue().getId()),
                 new Bin("title", event.getTitle()),
-                new Bin("url", event.getUrl())
+                new Bin("url", event.getUrl()),
+                new Bin("id", event.getId())
             );
     }
     
@@ -115,27 +133,31 @@ public class AerospikeService {
             );
     }
     
-    private Event eventFromRecord(Record thisRecord, boolean loadVenue) {
+    private Optional<Event> eventFromRecord(Record thisRecord, boolean loadVenue) {
         if (thisRecord == null) {
-            return null;
+            return Optional.empty();
         }
         else {
-            Event result = new Event();
-            result.setCategory(thisRecord.getString("category"));
-            result.setDate(fromAerospike(thisRecord.getLong("date")));
-            result.setSubCategory(thisRecord.getString("subCat"));
-            result.setTitle(thisRecord.getString("title"));
-            result.setUrl(thisRecord.getString("url"));
+            Event result = Event.builder()
+                    .category(thisRecord.getString("category"))
+                    .date(fromAerospike(thisRecord.getLong("date")))
+                    .subCategory(thisRecord.getString("subCat"))
+                    .title(thisRecord.getString("title"))
+                    .url(thisRecord.getString("url"))
+                    .id(thisRecord.getString("id"))
+                    .build();
+            
             if (loadVenue) {
                 String venueId = thisRecord.getString("venue");
                 if (venueId != null) {
-                    result.setVenue(this.readVenue(venueId));
+                    result.setVenue(this.readVenue(venueId).get());
                 }
             }
-            return result;
+            return Optional.of(result);
         }
     }
-    public Event readEvent(String id) {
+    
+    public Optional<Event> readEvent(String id) {
         Record thisRecord = client.get(null, new Key(NAMESPACE, EVENT_SET, id));
         return eventFromRecord(thisRecord, true);
     }
@@ -150,22 +172,66 @@ public class AerospikeService {
         List<Event> results = new ArrayList<>();
         while (recordSet.next()) {
             Record thisRecord = recordSet.getRecord();
-            results.add(eventFromRecord(thisRecord, false));
+            Optional<Event> thisEvent = eventFromRecord(thisRecord, false); 
+            if (thisEvent.isPresent()) {
+                results.add(thisEvent.get());
+            }
         }
         results.sort((a,b) -> (int)(a.getDate().getTime() - b.getDate().getTime()));
         return results;
     }
     
-    private Key getRowOfSeatsKey(String eventId, int row) {
-        return new Key(NAMESPACE, EVENT_SEAT_SET, eventId + "|" + row);
+    private Key getRowOfSeatsKey(String eventId, int section, int row) {
+        return new Key(NAMESPACE, EVENT_SEAT_SET, eventId + "|" + section + "|"+ row);
     }
     
     /**
-     * Get the status of the seats for an event. The result will be an array with the number of rows in the venue,
+     * Remove all the seat reservations for an event. This only removes the seats, no other
+     * @param event
+     */
+    public void clearSeatStatusesForEvent(Event event) {
+        // TODO: The MRT is throwing an exception here if used, not sure why. I suspect it's because
+        // of the RECORD_NOT_FOUND on some of the records?
+        List<Key> keys = new ArrayList<>();
+        List<Section> sections = event.getVenue().getSeatMap();
+        for (Section thisSection : sections) {
+            int rowsThisSection = thisSection.getNumRows();
+            for (int i = 0; i < rowsThisSection; i++) {
+                keys.add(getRowOfSeatsKey(event.getId(), thisSection.getSectionId(), i));
+            }
+        }
+        BatchPolicy batchPolicy = client.copyBatchPolicyDefault();
+//        batchPolicy.txn = new Txn();
+        batchPolicy.sendKey = true;
+        BatchDeletePolicy batchDeletePolicy = client.getBatchDeletePolicyDefault();
+        batchDeletePolicy.durableDelete = true;
+        try {
+            BatchResults results = client.delete(batchPolicy, batchDeletePolicy, keys.toArray(new Key[0]));
+            for (int i = 0; i < keys.size(); i++) {
+                switch (results.records[i].resultCode) {
+                case ResultCode.OK:
+                case ResultCode.KEY_NOT_FOUND_ERROR:
+                    break;
+                default:
+                    String error = String.format("Result code of %s (%d) unexpected on key %s during clearing of seat statuses\n,",
+                            ResultCode.getResultString(results.records[i].resultCode), results.records[i].resultCode, keys.get(i));
+                    throw new AerospikeException(error);
+                }
+            }
+//            client.commit(batchPolicy.txn);
+        }
+        catch (RuntimeException e) {
+//            client.abort(batchPolicy.txn);
+            throw e;
+        }
+    }
+    
+    /**
+     * Get the status of the seats for an event. The result will be an array (sections) with an array (number of rows in the venue),
      * and each item in the array will be an array of the seat statuses in that row. The seat statuses will be downcast
      * to a byte for more efficient storage
      * <p>
-     * For for a small theater with 4 rows and 5 seats per row, the result must be something like:
+     * For for a small theater with one section, 4 rows and 5 seats per row, the result must be something like:
      * <pre>
      * 0: 0 0 1 2 0
      * 1: 2 2 2 2 0
@@ -177,29 +243,45 @@ public class AerospikeService {
      * @param event
      * @return
      */
-    public byte[][] getEventSeatStatus(Event event) {
+    public byte[][][] getEventSeatStatus(Event event) {
         if (event.getVenue() == null) {
             throw new IllegalArgumentException("Event must be associated with a venue");
         }
-        int rows = event.getVenue().getNumRows();
-        int seatsPerRow = event.getVenue().getSeatCount();
+        List<Section> sections = event.getVenue().getSeatMap();
+        byte[][][] seatStatuses = new byte[sections.size()][][];
         
-        Key[] keys = new Key[rows];
-        for (int i = 0; i < rows; i++) {
-            keys[i] = getRowOfSeatsKey(event.getId(), i);
+        int totalKeys = event.getVenue().calcNumRowsOfSeatsInVenue();
+        Key[] keys = new Key[totalKeys];
+        int keyNum = 0;
+        for (Section thisSection : sections) {
+            int sectionId = thisSection.getSectionId();
+            if (sectionId < 0 || sectionId >= sections.size()) {
+                throw new IllegalStateException(String.format("Section id must be in the range 0->%d, but found %d", sections.size(), sectionId));
+            }
+            
+            int rows = thisSection.getNumRows();
+            for (int i = 0; i < rows; i++) {
+                keys[keyNum++] = getRowOfSeatsKey(event.getId(), sectionId, i);
+            }
         }
         Record[] records = client.get(null, keys);
-        byte[][] seatStatuses = new byte[(int)rows][];
-        for (int row = 0; row < rows; row++) {
-            seatStatuses[row] = new byte[seatsPerRow];
-            Record thisRecord = records[row];
-            if (thisRecord != null) {
-                Map<Long, Object> seatMap = (Map<Long, Object>) thisRecord.getMap("seats");
-                if (seatMap != null) {
-                    for (long thisSeat : seatMap.keySet()) {
-                        List<Object> seatData = (List<Object>) seatMap.get(thisSeat);
-                        int seatStatus = ((Long)seatData.get(0)).intValue();
-                        seatStatuses[row][(int)thisSeat] = (byte)seatStatus;
+        keyNum = 0;
+        for (Section thisSection : sections) {
+            int sectionId = thisSection.getSectionId();
+            int rows = thisSection.getNumRows();
+            int seatsPerRow = thisSection.getSeatsPerRow();
+            seatStatuses[sectionId] = new byte[rows][];
+            for (int row = 0; row < rows; row++) {
+                seatStatuses[sectionId][row] = new byte[seatsPerRow];
+                Record thisRecord = records[keyNum++];
+                if (thisRecord != null) {
+                    Map<Long, Object> seatMap = (Map<Long, Object>) thisRecord.getMap("seats");
+                    if (seatMap != null) {
+                        for (long thisSeat : seatMap.keySet()) {
+                            List<Object> seatData = (List<Object>) seatMap.get(thisSeat);
+                            int seatStatus = ((Long)seatData.get(0)).intValue();
+                            seatStatuses[sectionId][row][(int)thisSeat] = (byte)seatStatus;
+                        }
                     }
                 }
             }
@@ -219,7 +301,7 @@ public class AerospikeService {
      * @param newStatus
      * @param txn
      */
-    public void setSeatStatus(String eventId, long custId, int row, int seatNumber, SeatStatus newStatus, Txn txn) {
+    public void setSeatStatus(String eventId, String custId, int sectionId, int row, int seatNumber, SeatStatus newStatus, Txn txn) {
         final String SEAT_BIN = "seats";
         
         Map<Integer, Object> emptyMap = new HashMap<>();
@@ -231,7 +313,7 @@ public class AerospikeService {
         seatData.add(custId);
         
         // Seats are stored per row in a sub-ordinate object
-        Key key = getRowOfSeatsKey(eventId, row);
+        Key key = getRowOfSeatsKey(eventId, sectionId, row);
         Exp mapExists = Exp.binExists(SEAT_BIN);
         Exp seatExists = MapExp.getByKey(MapReturnType.EXISTS, Type.BOOL, Exp.val(seatNumber), Exp.mapBin(SEAT_BIN));
         
@@ -239,7 +321,7 @@ public class AerospikeService {
         Exp seatReplacementLogic = Exp.let(
                 Exp.def("seat", MapExp.getByKey(MapReturnType.VALUE, Type.LIST, Exp.val(seatNumber), Exp.mapBin(SEAT_BIN))),
                 Exp.def("status", ListExp.getByIndex(ListReturnType.VALUE, Type.INT, Exp.val(0), Exp.var("seat"))),
-                Exp.def("customer", ListExp.getByIndex(ListReturnType.VALUE, Type.INT, Exp.val(1), Exp.var("seat"))),
+                Exp.def("customer", ListExp.getByIndex(ListReturnType.VALUE, Type.STRING, Exp.val(1), Exp.var("seat"))),
                 Exp.cond(
                         // Resetting the seat back to AVAILABLE from the purchaser in state of RESERVED or PURCHASED
                         Exp.and(
@@ -293,6 +375,7 @@ public class AerospikeService {
         Exp checkSeatExists = Exp.cond(mapExists, seatLogic, createNewSeatInNewMap);
         
         WritePolicy wp = client.copyWritePolicyDefault();
+        wp.sendKey = true;
         wp.txn = txn;
         client.operate(wp, key, 
                 ExpOperation.write("seats", Exp.build(checkSeatExists), ExpWriteFlags.DEFAULT)
@@ -311,6 +394,15 @@ public class AerospikeService {
             wp.txn = txn;
         }
         Key key = new Key(NAMESPACE, VENUE_SET, venue.getId());
+        List<Map<String, Object>> sectionMap = new ArrayList<>();
+        for (Section section : venue.getSeatMap()) {
+            Map<String, Object> map = Map.of(
+                    "name", section.getName(),  
+                    "numRows", section.getNumRows(),
+                    "seatsPerRow", section.getSeatsPerRow(),
+                    "id", section.getSectionId());
+            sectionMap.add(map);
+        }
         client.put(wp, key, 
                 new Bin("address", venue.getAddress()),
                 new Bin("city", venue.getCity()),
@@ -318,15 +410,24 @@ public class AerospikeService {
                 new Bin("desc", venue.getDescription()),
                 new Bin("name", venue.getName()),
                 new Bin("postCode", venue.getPostalCode()),
-                new Bin("seatCount", venue.getSeatCount()),
-                new Bin("numRows", venue.getNumRows())
+                new Bin("seatMap", sectionMap)
             );
     }
     
-    public Venue readVenue(String id) {
+    private int asInt(Object obj) {
+        Number number = (Number)obj;
+        return number.intValue();
+    }
+    
+    /**
+     * Read the venue details, including the seat map
+     * @param id
+     * @return
+     */
+    public Optional<Venue> readVenue(String id) {
         Record thisRecord = client.get(null, new Key(NAMESPACE, VENUE_SET, id));
         if (thisRecord == null) {
-            return null;
+            return Optional.empty();
         }
         else {
             Venue result = new Venue();
@@ -337,9 +438,17 @@ public class AerospikeService {
             result.setName(thisRecord.getString("name"));
             result.setId(id);
             result.setPostalCode(thisRecord.getString("postCode"));
-            result.setSeatCount(thisRecord.getInt("seatCount"));
-            result.setNumRows(thisRecord.getInt("numRows"));
-            return result;
+            List<Map<String, Object>> sectionMaps = (List<Map<String, Object>>) thisRecord.getList("seatMap");
+            for (Map<String, Object> thisSectionMap : sectionMaps) {
+                Section section = Section.builder()
+                        .name((String)thisSectionMap.get("name"))
+                        .numRows(asInt(thisSectionMap.get("numRows")))
+                        .seatsPerRow(asInt(thisSectionMap.get("seatsPerRow")))
+                        .sectionId(asInt(thisSectionMap.get("id")))
+                        .build();
+                result.getSeatMap().add(section);
+            }
+            return Optional.of(result);
         }
     }
     
@@ -357,7 +466,7 @@ public class AerospikeService {
         Key key = new Key(NAMESPACE, SHOPPING_CART_SET, shoppingCart.getId());
         List<String> seats = new ArrayList<>(shoppingCart.getSeats().size());
         for (Seat thisSeat: shoppingCart.getSeats()) {
-            seats.add(thisSeat.getRow() + "-" + thisSeat.getSeatNumber());
+            seats.add(thisSeat.getSectionId() + "-" + thisSeat.getRow() + "-" + thisSeat.getSeatNumber());
         }
         client.put(wp, key, 
                 new Bin("created", toAerospike(shoppingCart.getCreated())),
@@ -368,10 +477,10 @@ public class AerospikeService {
             );
     }
     
-    public ShoppingCart loadBooking(Policy policy, String shoppingCartId) {
-        Record thisRecord = client.get(policy, new Key(NAMESPACE, SHOPPING_CART_SET, shoppingCartId));
+    public Optional<ShoppingCart> readCart(String cartId) {
+        Record thisRecord = client.get(null, new Key(NAMESPACE, SHOPPING_CART_SET, cartId));
         if (thisRecord == null) {
-            return null;
+            return Optional.empty();
         }
         else {
             ShoppingCart result = new ShoppingCart();
@@ -379,15 +488,12 @@ public class AerospikeService {
             result.setCustId(thisRecord.getLong("custId"));
             result.setEventId(thisRecord.getString("eventId"));
             result.setStatus(Status.valueOf(thisRecord.getString("status")));
-            List<String> seatList = (List<String>) thisRecord.getList("seats");
-            Set<Seat> seats = new HashSet<>();
-            for (String thisSeatStr : seatList) {
-                String[] parts = thisSeatStr.split("-");
-                Seat seat = new Seat(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-                seats.add(seat);
+            result.setId(cartId);
+            List<String> seatStrings = (List<String>) thisRecord.getList("seats");
+            for (String thisSeatString : seatStrings) {
+                result.getSeats().add(Seat.fromString(thisSeatString));
             }
-            result.setSeats(seats);
-            return result;
+            return Optional.of(result);
         }
     }
     

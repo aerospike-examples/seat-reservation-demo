@@ -1,6 +1,7 @@
 package com.aerospike.demos.seat_reservation_demo;
 
 import java.util.Date;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.aerospike.demos.seat_reservation_demo.model.Event;
 import com.aerospike.demos.seat_reservation_demo.model.Seat;
+import com.aerospike.demos.seat_reservation_demo.model.Section;
 import com.aerospike.demos.seat_reservation_demo.model.ShoppingCart;
 import com.aerospike.demos.seat_reservation_demo.model.Venue;
 import com.aerospike.demos.seat_reservation_demo.services.EventService;
@@ -26,13 +28,16 @@ public class EventServiceTest {
     @Autowired
     private ShoppingCartService bookingService;
     
-    private void printSeatMap(byte[][] data) {
-        for (int row = 0; row < data.length; row++) {
-            System.out.printf("%04d: ", row+1);
-            for (int seatNum = 0; seatNum < data[row].length; seatNum++) {
-                System.out.printf("%d:%d ", seatNum+1, data[row][seatNum]);
+    private void printSeatMap(byte[][][] data) {
+        for (int section = 0; section < data.length; section++) {
+            System.out.println("**** Section " + (1+section) + " ****");
+            for (int row = 0; row < data[section].length; row++) {
+                System.out.printf("%04d: ", row+1);
+                for (int seatNum = 0; seatNum < data[section][row].length; seatNum++) {
+                    System.out.printf("%d:%d ", seatNum+1, data[section][row][seatNum]);
+                }
+                System.out.println();
             }
-            System.out.println();
         }
     }
 
@@ -44,24 +49,30 @@ public class EventServiceTest {
         venue.setCountry("USA");
         venue.setId("State Center");
         venue.setName(venue.getId());
-        venue.setNumRows(10);
         venue.setPostalCode("80001");
-        venue.setSeatCount(15);
+        venue.addSection(Section.builder().name("Section").numRows(24).seatsPerRow(24).build());
         venueService.saveVenue(venue, null);
         
-        Venue readVenue = venueService.loadVenue(venue.getId());
+        Venue readVenue = venueService.loadVenue(venue.getId()).get();
         Assertions.assertTrue(readVenue.equals(venue));
         
-        Event event = new Event();
-        event.setDate(new Date());
-        event.setCategory("MUSIC");
-        event.setId("1234567890");
-        event.setSubCategory("ROCK");
-        event.setTitle("Queen Revival Concert");
-        event.setUrl("http://testUrl");
-        event.setVenue(readVenue);
+        Event event = Event.builder()
+                .date(new Date())
+                .category("MUSIC")
+                .id("1234567890")
+                .subCategory("ROCK")
+                .title("Queen Revival Concert")
+                .url("http://testUrl")
+                .venue(readVenue)
+                .build();
         
         eventService.saveEvent(event);
+        
+        Optional<Event> readEvent = eventService.loadEvent(event.getId());
+        Assertions.assertTrue(readEvent.isPresent());
+        Assertions.assertTrue(readEvent.get().equals(event));
+        
+        eventService.clearAllSeats(event);
         
         System.out.println("\n*** Seat map prior to booking ***");
         printSeatMap(eventService.getAvailableSeats(event));
@@ -72,7 +83,7 @@ public class EventServiceTest {
         shoppingCart.setEventId(event.getId());
         shoppingCart.setId("1244");
         
-        bookingService.addSeatsToBooking(shoppingCart, new Seat(3, 8), new Seat(3, 9));
+        bookingService.addSeatsToCart(shoppingCart, new Seat(0, 3, 8), new Seat(0, 3, 9));
         System.out.println("\n*** Seat map after booking two seats ***");
         printSeatMap(eventService.getAvailableSeats(event));
         
