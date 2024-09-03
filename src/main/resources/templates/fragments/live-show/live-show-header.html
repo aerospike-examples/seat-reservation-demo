@@ -1,7 +1,8 @@
-<div class="live-show-header" th:fragment="live-show-header(liveShow)">
-    <h1><span th:text="${liveShow.artist}">Artist</span> - Seatmap</h1>
-    <p class="live-show-details">
-        <strong th:text="${liveShow.artist}">Artist</strong> live at <strong th:text="${liveShow.venueName}">Venue Name</strong><br>
+<div class="concert-header" th:fragment="live-show-header(liveShow)">
+    <h1><span th:text="${liveShow.artist}">Artist</span></h1>
+    <p class="concert-header-details">
+        <strong th:text="${liveShow.artist}">Artist</strong> live at 
+        <strong th:text="${liveShow.venue.name}">Venue Name</strong><br>
         <strong th:text="${#dates.format(liveShow.date, 'MMMM d, yyyy')}">Date</strong> | Capacity: 6,912
     </p>                    
 </div>

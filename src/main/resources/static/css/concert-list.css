@@ -1,0 +1,70 @@
+h1 {
+    margin-bottom: 30px;
+}
+
+.concert-list {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 20px;
+}
+
+.concert-list-artist-heading {
+    font-size: 1.2em;
+    color: #003366;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.concert-list-item {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.concert-list-item:last-child {
+    border-bottom: none;
+}
+
+.concert-list-item h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 0.5px;
+    transition: text-decoration-thickness 0.3s ease;
+}
+
+.concert-list-item h3:hover {
+    text-decoration-thickness: 1.5px;
+}
+
+.concert-list-item p {
+    margin: 3px 0;
+    font-size: 0.9em;
+}
+
+.concert-list-item strong {
+    color: #003366;
+    font-weight: 600;
+}
+
+.footer-divider {
+    border: 0;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+}
+
+
+
+
