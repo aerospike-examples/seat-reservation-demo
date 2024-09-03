@@ -1,19 +1,20 @@
 <html layout:decorate="~{layout/base}">
 <head>
-    <title th:text="'Upcoming Live Shows'"></title>
+    <title th:text="'Upcoming Concerts'"></title>
 </head>
 
 <main layout:fragment="content">
     <div class="container">
         <img th:src="@{/images/logo.png}" alt="Ticketfaster Logo" class="logo">
         <div class="content-wrapper">
-            <h1>Upcoming Live Shows</h1>
-            <div class="live-show-list">
+            <h1>Upcoming Concerts</h1>
+            <div class="concert-list">
                 <div class="list-show-list-artist-container" th:each="artist : ${liveShowsByArtist}">
-                    <h2 class="live-show-list-artist-title" th:text="${artist.key}">Artist</h2>
-                    <div th:each="liveShow : ${artist.value}" class="live-show-list-details">
-                        <h3 class="live-show-list-detail-venue"><a th:href="@{/live-shows/{id}(id=${liveShow.id})}" th:text="${liveShow.venueName}">Venue Name</a></h3>
-                        <p class="live-show-list-detail-date"><strong>Date: </strong><span th:text="${#dates.format(liveShow.date, 'MMMM d, yyyy')}">Date</span></p>
+                    <h2 class="concert-list-artist-heading" th:text="${artist.key}">Artist</h2>
+                    <div th:each="concert : ${artist.value}" class="concert-list-item">
+                        <h3><a th:href="@{/concerts/{id}(id=${concert.id})}" th:text="${concert.venue.name}">Venue Name</a></h3>
+                        <p><strong>Date: </strong> <span th:text="${#dates.format(concert.date, 'MMMM d, yyyy')}">Date</span></p>
+                        <p><strong>Time: </strong> Gates open at 17:30, Show starts at 20:00</p>
                     </div>
                 </div>
             </div>
