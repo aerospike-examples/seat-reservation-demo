@@ -1,0 +1,321 @@
+.h2 {
+    color: #444;
+}
+
+.content-wrapper {
+    background-color: rgba(255, 255, 255, 0.60);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.live-show-details {
+    font-size: 1em;
+    color: #555;
+    text-align: center;
+    margin: 0 0 20px 0;
+    line-height: 1.4;
+}
+
+.live-show-details strong {
+    font-weight: 600;
+    color: #333;
+}
+
+.seatmap {
+    background-color: rgba(255, 255, 255, 0.55);
+    border-radius: 5px;
+    padding: 20px;
+    margin-top: 20px;
+    overflow-x: auto;
+    position: relative;
+}
+
+.seatmap-legend {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.seatmap-legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.seatmap-legend-item svg {
+    margin-right: 5px;
+}
+
+.seatmap-stage {
+    width: 40%;
+    height: 50px;
+    background-color: #272727;
+    margin: 0 auto 30px;
+    border-radius: 50% 50% 0 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+#seatmap-sections {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.seatmap-section {
+    border: 1px solid #ddd;
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.seatmap-section-seats {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 1px;
+    flex-grow: 1;
+}
+
+.seatmap-section-seat {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+}
+
+.seatmap-section-seat svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.seat.available {
+    fill: #00A3E0;
+}
+
+.seat.in-cart {
+    fill: #FFA500;
+}
+
+.seat.sold {
+    fill: #D3D3D3;
+}
+
+/* Zoomed in 'Section' (as in, section of seats) Modal */
+
+.section-modal-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 1000;
+}
+
+.section-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    height: 80%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-left: calc(12.5% - 10px);
+    overflow: hidden;
+}
+
+.section-modal-content h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1em;
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Section Modal - Legend */
+.section-modal-legend {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.section-modal-legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.section-modal-legend-item svg {
+    margin-right: 5px;
+}
+
+
+.section-modal-seats-container {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    grid-template-rows: repeat(24, 1fr);
+    gap: 1px;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-bottom: 10px;
+}
+
+.section-modal-seat {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+}
+
+.section-modal-seat svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Shopping Cart */
+.shopping-cart {
+    /* display: none; */
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 25%;
+    height: 100%;
+    background-color: white;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    z-index: 1001;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.shopping-cart h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.2em;
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.shopping-cart-items {
+    flex-grow: 1;
+}
+
+.shopping-cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.shopping-cart-item span {
+    font-size: 0.9em;
+}
+
+.shopping-cart-item span:last-child {
+    font-weight: bold;
+}
+
+.shopping-cart-total {
+    margin-top: 20px;
+    font-size: 1.2em;
+}
+
+.shopping-cart-actions {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shopping-cart-button {
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.shopping-cart-button.abandon-cart {
+    background-color: transparent;
+    color: #8E44AD;
+    border: 2px solid #8E44AD;
+}
+
+.shopping-cart-button.abandon-cart:hover {
+    background-color: rgba(142, 68, 173, 0.1);
+}
+
+.shopping-cart-button.checkout {
+    background-color: #16A085;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(22, 160, 133, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 14px 24px;
+}
+
+.shopping-cart-button.checkout:hover {
+    background-color: #138D75;
+    box-shadow: 0 6px 8px rgba(22, 160, 133, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Admin reset button */
+.admin-reset {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.admin-reset:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}

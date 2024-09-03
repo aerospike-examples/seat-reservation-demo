@@ -31,7 +31,7 @@ public class CustomerService {
     public int createCustomers(long startId, int numCustomers, int numThreads) throws InterruptedException {
         final AtomicLong currentId = new AtomicLong(startId);
         final AtomicInteger successfulCustomers = new AtomicInteger();
-        if (numThreads <= 0) {
+        if (numThreads <= 0) {  
             numThreads = Runtime.getRuntime().availableProcessors();
         }
         

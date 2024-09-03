@@ -1,0 +1,11 @@
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST  http://localhost:8080/rpc/init
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"concertId": "Oasis-one-day"}' http://localhost:8080/rpc/resetConcert
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"id": "abc123", "seats":["0-2-3", "0-2-4"]}' http://localhost:8080/concerts/Oasis-one-day/shopping-carts
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X GET  http://localhost:8080/concerts/Oasis-one-day/shopping-carts/abc123
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"seats":["0-3-5", "0-3-6"]}' http://localhost:8080/concerts/Oasis-one-day/shopping-carts/abc123/seats
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"seats":["0-4-5", "0-4-7"]}' http://localhost:8080/concerts/Oasis-one-day/shopping-carts/abc123/seats
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X DELETE -d '{"seats":["0-4-7"]}' http://localhost:8080/concerts/Oasis-one-day/shopping-carts/abc123/seats
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X DELETE -d '{"id" : "abc123"}' http://localhost:8080/concerts/Oasis-one-day/purchases
+curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST -d '{"id" : "abc123"}' http://localhost:8080/concerts/Oasis-one-day/purchases
+
+

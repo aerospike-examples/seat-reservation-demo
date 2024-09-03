@@ -1,0 +1,19 @@
+<div th:fragment="seatmap-sections" class="seatmap-sections">
+    <div th:each="section : ${sectionsWithSeats}" 
+        class="seatmap-section">
+        <h3 th:text="${'Section ' + section.sectionNumber}"></h3>
+        <div th:fragment="seatmap-section"
+             th:id="'seatmap-section-' + ${section.sectionNumber}" 
+             class="seatmap-section-seats">
+            <div th:each="seat, seatStat : ${section.seats}"
+                 th:class="'seatmap-section-seat seat ' + ${seat.statusString}"
+                 th:data-seat-id="${seatStat.index}">
+                 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10,30 L10,90 L90,90 L90,30 L80,30 L80,10 L20,10 L20,30 Z" />
+                    <path d="M15,35 L85,35 L85,85 L15,85 Z" fill="#FFFFFF" fill-opacity="0.2" />
+                    <path d="M25,15 L75,15 L75,30 L25,30 Z" fill="#FFFFFF" fill-opacity="0.2" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>

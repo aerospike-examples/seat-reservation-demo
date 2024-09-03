@@ -1,0 +1,25 @@
+<div th:fragment="shopping-cart-modal" class="shopping-cart">
+    <h3>Shopping Cart</h3>
+    <div class="shopping-cart-items">
+        <div class="shopping-cart-item">
+            <span>Seat A30</span>
+            <span>$150</span>
+        </div>
+        <div class="shopping-cart-item">
+            <span>Seat A31</span>
+            <span>$150</span>
+        </div>
+        <!-- <div class="shopping-cart-item" th:each="item : ${cart.items}">
+            <span th:text="${item.seatNumber}">Seat A31</span>
+            <span th:text="${'$' + item.price}">$150</span>
+        </div> -->
+    </div>
+    <div class="shopping-cart-total">
+        Total: $<span id="cart-total-amount">300.00</span>
+        <!-- Total: $<span id="cart-total-amount" th:text="${cart.total}">300.00</span> -->
+    </div>
+    <div class="shopping-cart-actions">
+        <button class="shopping-cart-button checkout">Submit Payment</button>
+        <button class="shopping-cart-button abandon-cart">Abandon Cart</button>
+    </div>
+</div>

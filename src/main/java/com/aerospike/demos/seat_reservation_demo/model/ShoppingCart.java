@@ -11,7 +11,8 @@ public class ShoppingCart {
     
     public enum Status {
         PENDING,
-        PURCHASED
+        PURCHASED,
+        ABANDONED
     }
     private String id;
     private String eventId;
@@ -19,4 +20,6 @@ public class ShoppingCart {
     private Status status = Status.PENDING;
     private Set<Seat> seats = new HashSet<>();
     private Date created;
+    
+    // TODO: Consider expiry of the shopping cart.
 }

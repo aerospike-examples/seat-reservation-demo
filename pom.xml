@@ -4,18 +4,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.2</version>
+		<version>3.3.3</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.aerospike.demos</groupId>
 	<artifactId>seat-reservation-demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Seat Reservation Demo</name>
-	<description>Demo project for Spring Boot</description>
-	<url />
-	<licenses>
-		<license />
-	</licenses>
+	<description>Demo showing multi-record Transactions using a preview of Aerospike 8.0.</description>
 	<repositories>
 		<repository>
 			<id>aerospike-jfrog</id>
@@ -48,122 +44,64 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+
+		<!-- GSON for parsing of existing Events file -->
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.github.javafaker/javafaker -->
+		<!-- Java Faker to create Customers -->
 			<dependency>
 		    <groupId>com.github.javafaker</groupId>
 		    <artifactId>javafaker</artifactId>
 		    <version>1.0.2</version>
 		</dependency>
 
-	<dependency>
-    <groupId>nz.net.ultraq.thymeleaf</groupId>
-    <artifactId>thymeleaf-layout-dialect</artifactId>
-</dependency><!-- Web dependencies --><dependency>
-    <groupId>org.webjars</groupId>
-    <artifactId>webjars-locator</artifactId>
-    <version>0.46</version>
-</dependency><dependency>
-    <groupId>org.webjars.npm</groupId>
-    <artifactId>alpinejs</artifactId>
-    <version>3.13.10</version>
-</dependency><dependency>
-    <groupId>org.webjars.npm</groupId>
-    <artifactId>htmx.org</artifactId>
-    <version>2.0.0</version>
-</dependency><dependency>
-    <groupId>io.github.wimdeblauwe</groupId>
-    <artifactId>htmx-spring-boot-thymeleaf</artifactId>
-    <version>3.4.1</version>
-</dependency></dependencies>
+		<!-- Testing dependencies -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+		<!-- Thymeleaf extensions -->
+		<dependency>
+			<groupId>nz.net.ultraq.thymeleaf</groupId>
+			<artifactId>thymeleaf-layout-dialect</artifactId>
+		</dependency>
+			<dependency>
+			<groupId>io.github.wimdeblauwe</groupId>
+			<artifactId>htmx-spring-boot-thymeleaf</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+		
+		<!-- WebJars for frontend dependencies -->
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>webjars-locator</artifactId>
+			<version>0.46</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>htmx.org</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+	</dependencies>
 
-	<build><resources><resource>
-    <directory>src/main/resources</directory>
-    <excludes>
-        <exclude>**/*.html</exclude>
-        <exclude>**/*.css</exclude>
-        <exclude>**/*.js</exclude>
-        <exclude>**/*.svg</exclude>
-    </excludes>
-</resource>
-</resources>
+	<build>
 		<plugins>
+			<!-- Spring Boot Maven plugin for creating executable JARs -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-		<plugin>
-    <groupId>com.github.eirslett</groupId>
-    <artifactId>frontend-maven-plugin</artifactId>
-</plugin></plugins>
-	<pluginManagement><plugins><plugin>
-    <groupId>com.github.eirslett</groupId>
-    <artifactId>frontend-maven-plugin</artifactId>
-    <version>${frontend-maven-plugin.version}</version>
-    <executions>
-        <execution>
-            <id>install-frontend-tooling</id>
-            <goals>
-                <goal>install-node-and-npm</goal>
-            </goals>
-            <configuration>
-                <nodeVersion>${frontend-maven-plugin.nodeVersion}</nodeVersion>
-                <npmVersion>${frontend-maven-plugin.npmVersion}</npmVersion>
-            </configuration>
-        </execution>
-        <execution>
-            <id>run-npm-install</id>
-            <goals>
-                <goal>npm</goal>
-            </goals>
-        </execution>
-        <execution>
-            <id>run-npm-build</id>
-            <goals>
-                <goal>npm</goal>
-            </goals>
-            <configuration>
-                <arguments>run build</arguments>
-            </configuration>
-        </execution>
-    </executions>
-</plugin></plugins></pluginManagement></build>
+		</plugins>
+	</build>
 
-<profiles><profile>
-    <id>release</id>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>run-npm-build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run build-prod</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-</profile></profiles></project>
+</project>

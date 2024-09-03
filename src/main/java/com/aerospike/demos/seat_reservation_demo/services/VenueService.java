@@ -1,5 +1,7 @@
 package com.aerospike.demos.seat_reservation_demo.services;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +13,7 @@ public class VenueService {
     @Autowired
     private AerospikeService aerospikeService;
     
-    public Venue loadVenue(String venueId) {
+    public Optional<Venue> loadVenue(String venueId) {
         return aerospikeService.readVenue(venueId);
     }
     

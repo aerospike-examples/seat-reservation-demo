@@ -1,0 +1,42 @@
+<html layout:decorate="~{layout/base}">
+    <head>
+        <title th:text="${liveShow.artist + ' live at ' + liveShow.venueName}"></title>
+    </head>
+
+
+    <main layout:fragment="content">
+        <div class="container">
+            <img src="/images/logo.png" alt="Ticketfaster Logo" class="logo">
+            <div class="content-wrapper">
+
+                <!-- Live Show header (show details) -->
+                <div th:replace="~{fragments/live-show/live-show-header :: live-show-header(${liveShow})}"></div>
+
+                <div class="seatmap">
+
+                    <!-- Seatmap Legend & Stage -->
+                    <div th:replace="~{fragments/live-show/seatmap-legend :: seatmap-legend}"></div>
+                    <div class="seatmap-stage">STAGE</div>
+
+                    <!-- Seatmap Sections -->
+                    <div th:replace="~{fragments/live-show/seatmap-sections :: seatmap-sections}"></div>
+                    <!-- Section Modal (hidden on load)
+                    <div th:replace="~{fragments/live-show/section-modal :: section-modal}"></div>
+
+                    Shopping Cart (hidden on load) 
+                    <div th:replace="~{fragments/live-show/shopping-cart-modal :: shopping-cart-modal}"></div> -->
+
+
+                </div>
+            </div>
+            <div class="footer">
+                Ticketfaster is not a real corporation. Any similarity to a real corporation is simply coincidence.
+            </div>
+        </div>
+
+    </main>
+
+    <th:block layout:fragment="script-content">
+        <script th:src="@{/js/live-show.js}"></script>
+    </th:block>
+</html>
