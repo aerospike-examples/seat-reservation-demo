@@ -1,0 +1,31 @@
+<html layout:decorate="~{layout/base}">
+<head>
+    <title th:text="'Upcoming Live Shows'"></title>
+</head>
+
+<main layout:fragment="content">
+    <div class="container">
+        <img th:src="@{/images/logo.png}" alt="Ticketfaster Logo" class="logo">
+        <div class="content-wrapper">
+            <h1>Upcoming Live Shows</h1>
+            <div class="live-show-list">
+                <div class="list-show-list-artist-container" th:each="artist : ${liveShowsByArtist}">
+                    <h2 class="live-show-list-artist-title" th:text="${artist.key}">Artist</h2>
+                    <div th:each="liveShow : ${artist.value}" class="live-show-list-details">
+                        <h3 class="live-show-list-detail-venue"><a th:href="@{/live-shows/{id}(id=${liveShow.id})}" th:text="${liveShow.venueName}">Venue Name</a></h3>
+                        <p class="live-show-list-detail-date"><strong>Date: </strong><span th:text="${#dates.format(liveShow.date, 'MMMM d, yyyy')}">Date</span></p>
+                    </div>
+                </div>
+            </div>
+            <hr class="footer-divider">
+            <div class="footer">
+                Ticketfaster is not a real corporation. Any similarity to a real corporation is simply coincidence.
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block layout:fragment="script-content">
+    <!-- Add any page-specific scripts here if needed -->
+</th:block>
+</html>

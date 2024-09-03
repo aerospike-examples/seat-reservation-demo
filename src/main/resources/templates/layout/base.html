@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html th:lang="|${#locale.language}-${#locale.country}|"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/live-show.css}">
+    <link rel="stylesheet" th:href="@{/css/live-show-list.css}">
+
+    <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">TicketFaster</title>
+</head>
+
+<body>
+    <main layout:fragment="content">
+    </main>
+
+    <!-- Include HTMX and Alpine.js from WebJars -->
+    <script type="text/javascript" th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
+    
+    <!-- Page-specific scripts -->
+    <th:block layout:fragment="script-content">
+    </th:block>
+</body>
+</html>

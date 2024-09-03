@@ -1,4 +1,4 @@
-package com.aerospike.demos.seat_reservation_demo;
+package com.aerospike.demos.seat_reservation_demo.controller;
 
 import java.io.IOException;
 import java.io.InputStream;

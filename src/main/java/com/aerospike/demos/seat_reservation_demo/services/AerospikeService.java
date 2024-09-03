@@ -101,24 +101,6 @@ public class AerospikeService {
         client.truncate(null, NAMESPACE, VENUE_SET, null);
     }
 
-    public void save(WritePolicy wp, Event event, Txn txn) {
-        if (wp == null) {
-            wp = client.copyWritePolicyDefault();
-            wp.txn = txn;
-        }
-        wp.sendKey = true;
-        Key key = new Key(NAMESPACE, EVENT_SET, event.getId());
-        client.put(wp, key, 
-                new Bin("date", toAerospike(event.getDate())),
-                new Bin("category", event.getCategory()),
-                new Bin("subCat", event.getSubCategory()),
-                new Bin("venue", event.getVenue() == null ? "" : event.getVenue().getId()),
-                new Bin("title", event.getTitle()),
-                new Bin("url", event.getUrl()),
-                new Bin("id", event.getId())
-            );
-    }
-    
     public void save(WritePolicy wp, Customer customer, Txn txn) {
         if (wp == null && txn != null) {
             wp = client.copyWritePolicyDefault();
@@ -133,12 +115,33 @@ public class AerospikeService {
             );
     }
     
+
+    public void save(WritePolicy wp, Event event, Txn txn) {
+        if (wp == null) {
+            wp = client.copyWritePolicyDefault();
+            wp.txn = txn;
+        }
+        wp.sendKey = true;
+        Key key = new Key(NAMESPACE, EVENT_SET, event.getId());
+        client.put(wp, key,
+                new Bin("artist", event.getArtist()),
+                new Bin("category", event.getCategory()),
+                new Bin("date", toAerospike(event.getDate())),
+                new Bin("id", event.getId()),
+                new Bin("subCat", event.getSubCategory()),
+                new Bin("title", event.getTitle()),
+                new Bin("url", event.getUrl()),
+                new Bin("venue", event.getVenue() == null ? "" : event.getVenue().getId())
+            );
+    }
+    
     private Optional<Event> eventFromRecord(Record thisRecord, boolean loadVenue) {
         if (thisRecord == null) {
             return Optional.empty();
         }
         else {
             Event result = Event.builder()
+                    .artist(thisRecord.getString("artist"))
                     .category(thisRecord.getString("category"))
                     .date(fromAerospike(thisRecord.getLong("date")))
                     .subCategory(thisRecord.getString("subCat"))
@@ -172,7 +175,7 @@ public class AerospikeService {
         List<Event> results = new ArrayList<>();
         while (recordSet.next()) {
             Record thisRecord = recordSet.getRecord();
-            Optional<Event> thisEvent = eventFromRecord(thisRecord, false); 
+            Optional<Event> thisEvent = eventFromRecord(thisRecord, true); 
             if (thisEvent.isPresent()) {
                 results.add(thisEvent.get());
             }

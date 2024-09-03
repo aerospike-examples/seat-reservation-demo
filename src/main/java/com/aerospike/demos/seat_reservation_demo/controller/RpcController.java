@@ -1,4 +1,4 @@
-package com.aerospike.demos.seat_reservation_demo;
+package com.aerospike.demos.seat_reservation_demo.controller;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.aerospike.demos.seat_reservation_demo.dto.ResetConcertRequest;
@@ -22,6 +23,7 @@ import com.aerospike.demos.seat_reservation_demo.services.VenueService;
  * Implements pseudo methods not related to business functionality.
  */
 @RestController()
+@RequestMapping("/rpc")
 public class RpcController {
     @Autowired
     private AerospikeService aerospikeService;
@@ -36,7 +38,7 @@ public class RpcController {
     // RPC calls
     // ---------------------------------------
     // Call to reset a concert to the defaul
-    @PostMapping("/rpc/init") 
+    @PostMapping("/init") 
     public void resetAll() {
         // Reset the database to the default
         aerospikeService.resetAll();
@@ -45,7 +47,7 @@ public class RpcController {
 
     // POST /rpc/resetConcert
     //-concert_id=1234
-    @PostMapping("/rpc/resetConcert")
+    @PostMapping("/resetConcert")
     public ResponseEntity resetConcert(@RequestBody ResetConcertRequest resetConcertRequest) {
         Optional<Event> event = eventService.loadEvent(resetConcertRequest.getConcertId());
         if (event.isPresent()) {

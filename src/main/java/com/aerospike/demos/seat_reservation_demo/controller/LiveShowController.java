@@ -1,4 +1,4 @@
-package com.aerospike.demos.seat_reservation_demo;
+package com.aerospike.demos.seat_reservation_demo.controller;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.aerospike.demos.seat_reservation_demo.model.Event;
@@ -18,14 +17,18 @@ import com.aerospike.demos.seat_reservation_demo.model.Section;
 import com.aerospike.demos.seat_reservation_demo.services.EventService;
 
 @Controller
-@RequestMapping("/")
-public class HomeController {
+public class LiveShowController {
     
     @Autowired
     private EventService eventService;
     
-    @GetMapping
-    public String index(Model model) {
+    @GetMapping("/")
+    public String redirectToLiveShowList() {
+        return "redirect:/live-shows";
+    }
+
+    @GetMapping("/test")
+    public String test(Model model) {
         return "index";
     }
     
@@ -36,6 +39,7 @@ public class HomeController {
                 .collect(Collectors.groupingBy(Event::getArtist));
         model.addAttribute("liveShowsByArtist", liveShowsByArtist);
         return "pages/live-show-list";
+//        return "live-show-list";
     }
 
     @GetMapping("/live-shows/{id}")

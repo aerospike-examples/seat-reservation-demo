@@ -1,0 +1,68 @@
+.live-show-list {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    margin-top: 30px;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.list-show-list-artist-container {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+}
+
+h2.live-show-list-artist-title {
+    color: #003366;
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.8em;
+    font-weight: 700;
+    text-align: left;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #003366;
+}
+
+.live-show-list-details {
+    padding: 15px 0;
+}
+
+.live-show-list-detail-venue {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #003366;
+    font-size: 1.2em;
+    font-weight: 600;
+
+    a {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        text-underline-offset: 3px;
+        text-decoration-thickness: 0.5px;
+
+        &:hover {
+            text-decoration-thickness: 1px;
+        }
+    }
+}
+
+.live-show-list-detail-date {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #555;
+    
+    strong {
+        color: #003366;
+        font-weight: 600;
+    }
+}
+
+.footer-divider {
+    border: 0;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+}
