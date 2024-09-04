@@ -266,10 +266,25 @@ public class ConcertController {
     }
     
     @GetMapping("/concerts/{concertId}/seats")
-    public byte[][][] getSeatStauses(@PathVariable String concertId) {
+    public List<List<List<Integer>>> getSeatStauses(@PathVariable String concertId) {
         Optional<Event> event = eventService.loadEvent(concertId);
         if (event.isPresent()) {
-            return eventService.getAvailableSeats(event.get());
+            byte[][][] map = eventService.getAvailableSeats(event.get());
+            List<List<List<Integer>>> venueMap = new ArrayList<>();
+            for (int sectionId = 0; sectionId < map.length; sectionId++) {
+                byte[][] sectionSeats = map[sectionId];
+                List<List<Integer>> sectionMap = new ArrayList<>();
+                venueMap.add(sectionMap);
+                for (int row = 0; row < sectionSeats.length; row++) {
+                    byte[] rowSeats = map[sectionId][row];
+                    List<Integer> rowMap = new ArrayList<>();
+                    sectionMap.add(rowMap);
+                    for (int seatNum = 0; seatNum < rowSeats.length; seatNum++ ) {
+                        rowMap.add((int)map[sectionId][row][seatNum]);
+                    }
+                }
+            }
+            return venueMap;
         }
         else {
             return null;
