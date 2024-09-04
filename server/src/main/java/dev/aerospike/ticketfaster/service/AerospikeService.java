@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.aerospike.client.AerospikeClient;
@@ -56,6 +57,9 @@ import jakarta.annotation.PreDestroy;
 
 @Service
 public class AerospikeService {
+    @Autowired
+    private NotifierService notifierService;
+    
     private static final String HOSTNAME = "localhost";
     public static final String NAMESPACE = "test";
     
@@ -393,6 +397,8 @@ public class AerospikeService {
         if (cache != null) {
             cache.updateSeat(sectionId, row, seatNumber, newStatus);
         }
+        notifierService.sendMessage("statusChange", 
+                String.format("%d-%d-%d:%d", sectionId, row, seatNumber, newStatus.getValue()));
     }
 
     /**
