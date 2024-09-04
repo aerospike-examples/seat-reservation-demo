@@ -74,6 +74,11 @@ public class ConcertController {
         }
     }
     
+    @GetMapping("/concerts/getAll/")
+    public List<Event> getAllEvents() {
+        return eventService.getAllEvents();
+    }
+    
     @GetMapping("/demo/eventsInDateRange/{startDate}/{endDate}")
     public List<Event> getEventsInDateRange(
             @PathVariable(name = "startDate") long startDate, 
@@ -249,4 +254,22 @@ public class ConcertController {
             return null;
         }
     }
+    
+    @GetMapping("/concerts/{concertId}/shopping-carts")
+    public ResponseEntity<List<Seat>> findAndReserveRandomSeats(@PathVariable String concertId, @RequestBody ShoppingCartCreateRequest request) {
+        int seatCount = request.getRandomSeatQuantity();
+        if (seatCount <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        Optional<ShoppingCart> shoppingCart = cartService.loadCart(request.getId());
+        if (shoppingCart.isPresent()) {
+            List<Seat> seats = cartService.findAndReserveRandomSeats(shoppingCart.get(), concertId, seatCount);
+            return ResponseEntity.ok(seats);
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    
 }
