@@ -50,6 +50,7 @@ import dev.aerospike.ticketfaster.model.Section;
 import dev.aerospike.ticketfaster.model.ShoppingCart;
 import dev.aerospike.ticketfaster.model.ShoppingCart.Status;
 import dev.aerospike.ticketfaster.model.Venue;
+import dev.aerospike.ticketfaster.util.SeatCache;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 
@@ -224,6 +225,8 @@ public class AerospikeService {
         }
     }
     
+    private Map<String, SeatCache> concertCache = new HashMap<>();
+    
     /**
      * Get the status of the seats for an event. The result will be an array (sections) with an array (number of rows in the venue),
      * and each item in the array will be an array of the seat statuses in that row. The seat statuses will be downcast
@@ -283,6 +286,13 @@ public class AerospikeService {
                     }
                 }
             }
+        }
+        SeatCache thisCache = concertCache.get(event.getId());
+        if (thisCache != null) {
+            thisCache.refresh(seatStatuses);
+        }
+        else {
+            concertCache.put(event.getId(), thisCache);
         }
         return seatStatuses;
     }
@@ -378,6 +388,11 @@ public class AerospikeService {
         client.operate(wp, key, 
                 ExpOperation.write("seats", Exp.build(checkSeatExists), ExpWriteFlags.DEFAULT)
             );
+        // The seat change was successful, put it in the cache
+        SeatCache cache = concertCache.get(eventId);
+        if (cache != null) {
+            cache.updateSeat(sectionId, row, seatNumber, newStatus);
+        }
     }
 
     /**
@@ -493,6 +508,15 @@ public class AerospikeService {
             }
             return Optional.of(result);
         }
+    }
+
+    public List<Seat> getRandomAvailableSeats(Event event, int count) {
+        SeatCache cache = concertCache.get(event.getId());
+        if (cache == null) {
+            cache = new SeatCache(event, this.getEventSeatStatus(event));
+            concertCache.put(event.getId(), cache);
+        }
+        return cache.getRandomAvailableSeats(count);
     }
     
     public void commitTxn(Txn txn) {
