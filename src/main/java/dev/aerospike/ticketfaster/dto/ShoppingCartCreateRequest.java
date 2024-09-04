@@ -9,5 +9,6 @@ import lombok.Data;
 public class ShoppingCartCreateRequest {
     private String id;
     private long userId;
+    private int randomSeatQuantity;
     private List<String> seats = new ArrayList<>();
 }

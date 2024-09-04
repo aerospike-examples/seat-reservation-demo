@@ -1,22 +1,30 @@
 package dev.aerospike.ticketfaster.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.aerospike.client.AerospikeException;
+import com.aerospike.client.ResultCode;
 import com.aerospike.client.Txn;
 
+import dev.aerospike.ticketfaster.model.Event;
 import dev.aerospike.ticketfaster.model.Seat;
 import dev.aerospike.ticketfaster.model.SeatStatus;
 import dev.aerospike.ticketfaster.model.ShoppingCart;
 import dev.aerospike.ticketfaster.model.ShoppingCart.Status;
+import dev.aerospike.ticketfaster.util.SeatCache.NotEnoughSeatsException;
 
 @Service
 public class ShoppingCartService {
     @Autowired
     AerospikeService aerospikeService;
 
+    @Autowired
+    EventService eventService;
+    
     public void createShoppingCart(ShoppingCart shoppingCart) {
         Txn txn = new Txn();
         try {
@@ -156,6 +164,32 @@ public class ShoppingCartService {
         }
     }
     
+    public List<Seat> findAndReserveRandomSeats(ShoppingCart cart, String eventId, int count) {
+        final int MAX_RETRIES = 10;
+        Optional<Event> event = eventService.loadEvent(eventId);
+        if (event.isEmpty()) {
+            throw new IllegalArgumentException("Event must be provided");
+        }
+        Event theEvent = event.get();
+        RuntimeException lastException = null;
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            try {
+                List<Seat> seats = aerospikeService.getRandomAvailableSeats(theEvent, count);
+                addSeatsToCart(cart, seats.toArray(new Seat[0]));
+                return seats;
+            }
+            catch (NotEnoughSeatsException nese) {
+                throw nese;
+            }
+            catch (AerospikeException ae) {
+                // TODO: Retry by result code (TXN errors, operational not applicable, etc)
+                lastException = ae;
+            }
+        }
+        throw lastException;
+    }
+
+
     public Optional<ShoppingCart> loadCart(String cartId) {
         return aerospikeService.readCart(cartId);
     }
