@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.ResultCode;
@@ -29,6 +32,7 @@ import dev.aerospike.ticketfaster.model.Event;
 import dev.aerospike.ticketfaster.model.Seat;
 import dev.aerospike.ticketfaster.model.ShoppingCart;
 import dev.aerospike.ticketfaster.service.EventService;
+import dev.aerospike.ticketfaster.service.NotifierService;
 import dev.aerospike.ticketfaster.service.ShoppingCartService;
 
 @RestController
@@ -38,6 +42,9 @@ public class ConcertController {
     
     @Autowired
     private ShoppingCartService cartService;
+    
+    @Autowired
+    private NotifierService notifierService;
     
     /**
      * Load a set of events and the associated venues from the /data/ticketmaster_events_2023-08-02.json file.
@@ -253,6 +260,11 @@ public class ConcertController {
         }
     }
     
+    @GetMapping("testBytes")
+    public byte[][] bytes() {
+        return new byte[][] {new byte[] {1,2,3,4,5,6}, new byte[] { 5,4,3}};
+    }
+    
     @GetMapping("/concerts/{concertId}/seats")
     public byte[][][] getSeatStauses(@PathVariable String concertId) {
         Optional<Event> event = eventService.loadEvent(concertId);
@@ -263,22 +275,9 @@ public class ConcertController {
             return null;
         }
     }
-    
-//    @GetMapping("/concerts/{concertId}/shopping-carts")
-//    public ResponseEntity<List<Seat>> findAndReserveRandomSeats(@PathVariable String concertId, @RequestBody ShoppingCartCreateRequest request) {
-//        int seatCount = request.getRandomSeatQuantity();
-//        if (seatCount <= 0) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//        Optional<ShoppingCart> shoppingCart = cartService.loadCart(request.getId());
-//        if (shoppingCart.isPresent()) {
-//            List<Seat> seats = cartService.findAndReserveRandomSeats(shoppingCart.get(), concertId, seatCount);
-//            return ResponseEntity.ok(seats);
-//        }
-//        else {
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
-    
-    
+        
+    @GetMapping("/register")
+    public @ResponseBody SseEmitter register() {
+        return notifierService.register();
+    }
 }
