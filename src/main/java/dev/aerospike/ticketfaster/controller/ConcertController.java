@@ -96,13 +96,22 @@ public class ConcertController {
         shoppingCart.setEventId(concertId);
         shoppingCart.setId(createRequest.getId());
         shoppingCart.setCustId(createRequest.getUserId());
-        Set<Seat> seats = new HashSet<>();
-        for (String seatStr : createRequest.getSeats()) {
-            seats.add(Seat.fromString(seatStr));
-        }
-        shoppingCart.setSeats(seats);
+        
         try {
-            cartService.createShoppingCart(shoppingCart);
+            int seatCount = createRequest.getRandomSeatQuantity();
+            if (seatCount > 0) {
+                cartService.createShoppingCart(shoppingCart);
+                List<Seat> seats = cartService.findAndReserveRandomSeats(shoppingCart, concertId, seatCount);
+                shoppingCart.getSeats().addAll(seats);
+            }
+            else {
+                Set<Seat> seats = new HashSet<>();
+                for (String seatStr : createRequest.getSeats()) {
+                    seats.add(Seat.fromString(seatStr));
+                }
+                shoppingCart.setSeats(seats);
+                cartService.createShoppingCart(shoppingCart);
+            }
             return ResponseEntity.created(null).body(ShoppingCartCreateResponse.from(shoppingCart));
         }
         catch (AerospikeException ae) {
@@ -255,21 +264,21 @@ public class ConcertController {
         }
     }
     
-    @GetMapping("/concerts/{concertId}/shopping-carts")
-    public ResponseEntity<List<Seat>> findAndReserveRandomSeats(@PathVariable String concertId, @RequestBody ShoppingCartCreateRequest request) {
-        int seatCount = request.getRandomSeatQuantity();
-        if (seatCount <= 0) {
-            return ResponseEntity.badRequest().build();
-        }
-        Optional<ShoppingCart> shoppingCart = cartService.loadCart(request.getId());
-        if (shoppingCart.isPresent()) {
-            List<Seat> seats = cartService.findAndReserveRandomSeats(shoppingCart.get(), concertId, seatCount);
-            return ResponseEntity.ok(seats);
-        }
-        else {
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @GetMapping("/concerts/{concertId}/shopping-carts")
+//    public ResponseEntity<List<Seat>> findAndReserveRandomSeats(@PathVariable String concertId, @RequestBody ShoppingCartCreateRequest request) {
+//        int seatCount = request.getRandomSeatQuantity();
+//        if (seatCount <= 0) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//        Optional<ShoppingCart> shoppingCart = cartService.loadCart(request.getId());
+//        if (shoppingCart.isPresent()) {
+//            List<Seat> seats = cartService.findAndReserveRandomSeats(shoppingCart.get(), concertId, seatCount);
+//            return ResponseEntity.ok(seats);
+//        }
+//        else {
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
     
     
 }

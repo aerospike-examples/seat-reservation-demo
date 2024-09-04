@@ -74,8 +74,8 @@ public class SeatCache {
         }
         List<Seat> retrievedSeats = new ArrayList<>();
         RandomIterator sectionIterator = new RandomIterator(seatMap.size());
-        RandomIterator rowIterator = new RandomIterator(0);
-        RandomIterator seatIterator = new RandomIterator(0);
+        RandomIterator rowIterator = new RandomIterator(1);
+        RandomIterator seatIterator = new RandomIterator(1);
         
         while (sectionIterator.hasNext()) {
             int thisSection = sectionIterator.next();
