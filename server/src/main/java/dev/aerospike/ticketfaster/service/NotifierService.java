@@ -15,19 +15,21 @@ public class NotifierService {
     private final Thread sendingThread;
     public NotifierService() {
         sendingThread = new Thread(() -> {
-            try {
-                Message message = messages.take();
-                for (SseEmitter emitter : emitters) {
-                    try {
-                        System.out.printf("sending: %s->%s\n", message.name, message.message);
-                        emitter.send(SseEmitter.event().name(message.name).data(message.message));
+            while (true) {
+                try {
+                    Message message = messages.take();
+                    for (SseEmitter emitter : emitters) {
+                        try {
+                            System.out.printf("sending: %s->%s\n", message.name, message.message);
+                            emitter.send(SseEmitter.event().name(message.name).data(message.message));
+                        }
+                        catch (IOException e) {
+                            emitters.remove(emitter);
+                        }
                     }
-                    catch (IOException e) {
-                        emitters.remove(emitter);
-                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }, "clientNotifierThread");
         sendingThread.setDaemon(true);
@@ -43,7 +45,7 @@ public class NotifierService {
         }
     }
     public void sendMessage(String name, String message) {
-        messages.add(new Message(name, message));
+        messages.offer(new Message(name, message));
     }
     
     private void removeEmitter(SseEmitter emitter) {
