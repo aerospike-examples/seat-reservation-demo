@@ -10,7 +10,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -27,14 +27,14 @@ public class Simulator implements Runnable {
     @CommandLine.Option(
             names = {"-t", "--threads"},
             description = "Number of threads",
-            defaultValue = "1")
-    private int numOfThreads = 1;
+            defaultValue = "2")
+    private int numOfThreads = 2;
 
     @CommandLine.Option(
             names = {"-s", "--seats"},
             description = "Number of seats",
-            defaultValue = "2")
-    private int numOfSeats = 2;
+            defaultValue = "30")
+    private int numOfSeats = 30;
 
     public static void main(String[] args) {
         // Triggers the CLI
@@ -75,10 +75,20 @@ public class Simulator implements Runnable {
         for (int i = 0; i < numOfThreads; i++) {
             executorService.submit(() -> {
                 try {
-                    // TODO: do that repeatedly until end condition - no more seats?
-                    reserveAndPurchaseSeats(client, numOfSeats, concertId);
+                    while (true) {
+                        try {
+                            reserveAndPurchaseSeats(client, numOfSeats, concertId);
+                        } catch (Exception e) {
+                            if (e.getMessage().contains("NotEnoughSeats")) {
+                                System.out.println("Finished execution, not enough seats left");
+                                return;
+                            } else {
+                                throw e;
+                            }
+                        }
+                    }
                 } catch (Exception e) {
-                    System.out.println("Error: %s".formatted(e));
+                    System.out.println("Error during reserveAndPurchaseSeats: %s".formatted(e));
                 }
             });
         }
@@ -134,23 +144,19 @@ public class Simulator implements Runnable {
     }
 
     private void reserveAndPurchaseSeats(HttpClient client, int numOfSeats, String concertId) throws Exception {
-        System.out.println("Creating shopping cart...");
-        // Create shopping cart
-        ShoppingCartCreateResponse cart = createShoppingCart(client, concertId);
-        System.out.println("Adding items to the shopping cart...");
-        // Add items to cart
-        addItemsToCart(client, concertId, cart.getShoppingCartId(), numOfSeats);
-        System.out.println("Finalizing purchase...");
-        // Finalize purchase
+        System.out.println("Creating shopping cart for concertId: %s with numOfSeats: %d..."
+                .formatted(concertId, numOfSeats));
+        ShoppingCartCreateResponse cart = createShoppingCart(client, concertId, numOfSeats);
+
+        System.out.println("Finalizing purchase for concertId: %s, cartId: %s..."
+                .formatted(concertId, cart.getShoppingCartId()));
         finalizePurchase(client, concertId, cart.getShoppingCartId());
     }
 
-    private ShoppingCartCreateResponse createShoppingCart(HttpClient client, String concertId) throws Exception {
+    private ShoppingCartCreateResponse createShoppingCart(HttpClient client, String concertId, int numOfSeats) throws Exception {
         ShoppingCartCreateRequest requestModel = new ShoppingCartCreateRequest();
-        requestModel.setId("abc123");
-        requestModel.setUserId(1L);
-        // TODO: Replace with getRandomSeats/bookRandomSeats
-        requestModel.setSeats(List.of("0-2-3", "0-2-4"));
+        requestModel.setId(UUID.randomUUID().toString()); // generate random shopping cart id
+        requestModel.setRandomSeatQuantity(numOfSeats);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String cartJson = objectMapper.writeValueAsString(requestModel);
@@ -164,47 +170,31 @@ public class Simulator implements Runnable {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() != 200) {
-            System.out.println("Error during createShoppingCart!!!!");
+        if (response.statusCode() < 200 || response.statusCode() > 299) {
             throw new Exception("Could not create shopping cart, error: %s".formatted(response.body()));
         }
 
-        ShoppingCartCreateResponse cart = objectMapper.readValue(response.body(), ShoppingCartCreateResponse.class);
-        System.out.println(cart);
-        return cart;
-    }
-
-    private void addItemsToCart(HttpClient client, String concertId, String cartId, int numOfSeats) throws Exception {
-        // TODO: Replace with getRandomSeats/bookRandomSeats (and use numOfSeats)
-        String seatsJson = "{\"seats\":[\"0-3-5\", \"0-3-6\"]}";
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/concerts/" + concertId + "/shopping-carts/" + cartId))
-                .header("Accept", "application/json")
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(seatsJson))
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) {
-            throw new Exception("Could not add items to shopping cart, error: %s".formatted(response.body()));
-        }
+        return objectMapper.readValue(response.body(), ShoppingCartCreateResponse.class);
     }
 
     private void finalizePurchase(HttpClient client, String concertId, String cartId) throws Exception {
-        String purchaseJson = "{\"id\" : \"" + cartId + "\"}";
+        ShoppingCartCreateRequest requestModel = new ShoppingCartCreateRequest();
+        requestModel.setId(cartId);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String cartJson = objectMapper.writeValueAsString(requestModel);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/concerts/" + concertId + "/shopping-carts/purchases"))
+                .uri(new URI("http://localhost:8080/concerts/" + concertId + "/purchases"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(purchaseJson))
+                .POST(HttpRequest.BodyPublishers.ofString(cartJson))
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() != 200) {
-            throw new Exception("Could not add items to shopping cart, error: %s".formatted(response.body()));
+        if (response.statusCode() < 200 || response.statusCode() > 299) {
+            throw new Exception("Could not finalize purchase of a shopping cart, error: %s".formatted(response.body()));
         }
     }
 }
