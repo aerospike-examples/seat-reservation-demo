@@ -2,6 +2,7 @@ package dev.aerospike.ticketfaster.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -171,20 +172,25 @@ public class ShoppingCartService {
             throw new IllegalArgumentException("Event must be provided");
         }
         Event theEvent = event.get();
-        RuntimeException lastException = null;
+        AerospikeException lastException = null;
         for (int i = 0; i < MAX_RETRIES; i++) {
             try {
                 List<Seat> seats = aerospikeService.getRandomAvailableSeats(theEvent, count);
                 addSeatsToCart(cart, seats.toArray(new Seat[0]));
                 return seats;
             }
-            catch (NotEnoughSeatsException nese) {
-                throw nese;
-            }
             catch (AerospikeException ae) {
-                // TODO: Retry by result code (TXN errors, operational not applicable, etc)
+                if (ae.getResultCode() == ResultCode.TRAN_FAILED) {
+                    try {
+                        Thread.sleep(ThreadLocalRandom.current().nextInt(10)+3);
+                    } catch (InterruptedException ignored) {
+                    }
+                }
                 lastException = ae;
             }
+        }
+        if (lastException.getResultCode() == ResultCode.TRAN_FAILED) {
+            throw new NotEnoughSeatsException(0, 0);
         }
         throw lastException;
     }
