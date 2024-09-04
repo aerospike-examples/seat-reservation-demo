@@ -14,94 +14,18 @@
 	<groupId>dev.aerospike</groupId>
 	<artifactId>ticketfaster</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
 	<name>TicketFaster</name>
 	<description>Demo showing multi-record Transactions using a preview of Aerospike 8.0.</description>
-	
+	<modules>
+		<module>simulator</module>
+		<module>server</module>
+	</modules>
+
 	<!-- Project properties -->
 	<properties>
 		<java.version>21</java.version>
 	</properties>
 	
-	<dependencies>
-		<!-- Spring Boot core dependencies -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
-		
-		<!-- Development tools -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.aerospike</groupId>
-			<artifactId>aerospike-client-jdk21</artifactId>
-			<version>9.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
 
-		
-		<!-- GSON for parsing of existing Events file -->
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-		</dependency>
-		<!-- Java Faker to create Customers -->
-			<dependency>
-		    <groupId>com.github.javafaker</groupId>
-		    <artifactId>javafaker</artifactId>
-		    <version>1.0.2</version>
-		</dependency>
-
-		<!-- Testing dependencies -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		
-		<!-- Thymeleaf extensions -->
-		<dependency>
-			<groupId>nz.net.ultraq.thymeleaf</groupId>
-			<artifactId>thymeleaf-layout-dialect</artifactId>
-		</dependency>
-			<dependency>
-			<groupId>io.github.wimdeblauwe</groupId>
-			<artifactId>htmx-spring-boot-thymeleaf</artifactId>
-			<version>3.4.1</version>
-		</dependency>
-		
-		<!-- WebJars for frontend dependencies -->
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>webjars-locator</artifactId>
-			<version>0.46</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars.npm</groupId>
-			<artifactId>htmx.org</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-	</dependencies>
-
-	<build>
-		<plugins>
-			<!-- Spring Boot Maven plugin for creating executable JARs -->
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
 </project>
