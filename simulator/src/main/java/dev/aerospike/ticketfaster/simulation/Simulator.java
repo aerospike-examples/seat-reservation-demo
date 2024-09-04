@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.aerospike.ticketfaster.dto.ResetConcertRequest;
 import dev.aerospike.ticketfaster.dto.ShoppingCartCreateRequest;
 import dev.aerospike.ticketfaster.dto.ShoppingCartCreateResponse;
+import dev.aerospike.ticketfaster.exception.SimulatorStopException;
 import picocli.CommandLine;
 
 import java.net.URI;
@@ -78,13 +79,9 @@ public class Simulator implements Runnable {
                     while (true) {
                         try {
                             reserveAndPurchaseSeats(client, numOfSeats, concertId);
-                        } catch (Exception e) {
-                            if (e.getMessage().contains("NotEnoughSeats")) {
-                                System.out.println("Finished execution, not enough seats left");
-                                return;
-                            } else {
-                                throw e;
-                            }
+                        } catch (SimulatorStopException e) {
+                            System.out.println("Simulator finished execution, not enough seats left");
+                            return;
                         }
                     }
                 } catch (Exception e) {
@@ -171,6 +168,9 @@ public class Simulator implements Runnable {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() < 200 || response.statusCode() > 299) {
+            if (response.statusCode() == 404) {
+                throw new SimulatorStopException();
+            }
             throw new Exception("Could not create shopping cart, error: %s".formatted(response.body()));
         }
 
