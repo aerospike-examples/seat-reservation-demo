@@ -99,6 +99,7 @@ public class AerospikeService {
         client.truncate(null, NAMESPACE, EVENT_SEAT_SET, null);
         client.truncate(null, NAMESPACE, SHOPPING_CART_SET, null);
         client.truncate(null, NAMESPACE, VENUE_SET, null);
+        concertCache.clear();
     }
 
     public void save(WritePolicy wp, Customer customer, Txn txn) {
@@ -228,7 +229,8 @@ public class AerospikeService {
             throw e;
         }
     }
-    
+
+    // TODO: should not be part of AerospikeService
     private Map<String, SeatCache> concertCache = new HashMap<>();
     
     /**
