@@ -37,10 +37,10 @@ public class RpcController {
     // ---------------------------------------
     // RPC calls
     // ---------------------------------------
-    // Call to reset a concert to the defaul
+    // Call to reset a concert to the default
     @PostMapping("/init") 
     public void resetAll() {
-        // Reset the database to the default
+        // Reset the database and cache to the default
         aerospikeService.resetAll();
         initializeDataModel();
     }
