@@ -102,6 +102,35 @@ $(function() {
 			return false;
 		}
 	}
+
+	var source = new EventSource("/register");
+	source.onmessage = function(event) {
+		console.log("Received event: ")
+		console.log(event);
+	}
 	
     console.log("Running!");
+	fetch("/testBytes", {method: 'GET'})
+	.then((data) => {
+		console.log(data);
+		data.arrayBuffer().then((bytes) => {
+			console.log(bytes);
+		})
+	});
+	
+	/*	
+	setTimeout(function() {
+		fetch("/send", {
+			headers: {
+				"Content-Type": "application/json"
+			},
+			method: 'POST',
+			body: JSON.stringify("this is a message")
+			
+		})
+		.then(function() {
+			console.log("message sent!");
+		})
+	}, 1000);
+	*/
 })
