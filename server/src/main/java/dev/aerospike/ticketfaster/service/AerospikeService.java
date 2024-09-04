@@ -228,6 +228,7 @@ public class AerospikeService {
 //            client.abort(batchPolicy.txn);
             throw e;
         }
+        concertCache.clear();
     }
 
     // TODO: should not be part of AerospikeService

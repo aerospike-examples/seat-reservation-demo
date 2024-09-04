@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -34,6 +33,7 @@ import dev.aerospike.ticketfaster.model.ShoppingCart;
 import dev.aerospike.ticketfaster.service.EventService;
 import dev.aerospike.ticketfaster.service.NotifierService;
 import dev.aerospike.ticketfaster.service.ShoppingCartService;
+import dev.aerospike.ticketfaster.util.SeatCache.NotEnoughSeatsException;
 
 @RestController
 public class ConcertController {
@@ -120,6 +120,9 @@ public class ConcertController {
                 cartService.createShoppingCart(shoppingCart);
             }
             return ResponseEntity.created(null).body(ShoppingCartCreateResponse.from(shoppingCart));
+        }
+        catch (NotEnoughSeatsException nese) {
+            return ResponseEntity.notFound().build();
         }
         catch (AerospikeException ae) {
             if (ae.getResultCode() == ResultCode.OP_NOT_APPLICABLE) {

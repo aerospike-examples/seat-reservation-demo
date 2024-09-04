@@ -54,7 +54,7 @@ public class SeatCache {
         countSeats();
     }
     
-    public void updateSeat(int sectionId, int row, int seatNum, SeatStatus newStatus) {
+    public synchronized void updateSeat(int sectionId, int row, int seatNum, SeatStatus newStatus) {
         cache[sectionId][row][seatNum] = (byte)newStatus.getValue();
         if (newStatus == SeatStatus.AVAILABLE) {
             availableSeats++;
