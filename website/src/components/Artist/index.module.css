@@ -1,0 +1,48 @@
+.concertListArtistHeading {
+    font-size: 1.2em;
+    color: #003366;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.concertListItem {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.concertListItem:last-child {
+    border-bottom: none;
+}
+
+.concertListItem h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 0.5px;
+    transition: text-decoration-thickness 0.3s ease;
+}
+
+.concertListItem h3:hover {
+    text-decoration-thickness: 1.5px;
+}
+
+.concertListItem p {
+    margin: 3px 0;
+    font-size: 0.9em;
+}
+
+.concertListItem strong {
+    color: #003366;
+    font-weight: 600;
+}

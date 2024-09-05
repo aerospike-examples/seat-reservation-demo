@@ -1,0 +1,18 @@
+.cart {
+    width: 900px;
+    display: flex;
+    gap: 20px;
+}
+.legend {
+    position: absolute;
+    top: 20px;
+    right: 0;
+}
+.selection {
+    width: 600px;
+    position: relative;
+    padding-top: 10px;
+}
+.seatMapSmall {
+    pointer-events: none;
+}

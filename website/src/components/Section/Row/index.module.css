@@ -1,0 +1,29 @@
+.seat {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+}
+
+.seat svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.seatAvailable {
+    fill: #00A3E0;
+}
+
+.seatInCart {
+    fill: #FFA500;
+}
+
+.seatInYourCart {
+    fill: #FF4081;
+}
+
+.seatSold {
+    fill: #D3D3D3;
+}

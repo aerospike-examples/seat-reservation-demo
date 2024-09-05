@@ -1,0 +1,14 @@
+.concertHeaderDetails {
+    font-size: 1em;
+    color: #555;
+    text-align: center;
+    line-height: 1.4;
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.concertHeaderDetails strong {
+    font-weight: 600;
+    color: #333;
+}

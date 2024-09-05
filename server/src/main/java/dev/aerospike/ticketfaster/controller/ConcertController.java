@@ -81,7 +81,7 @@ public class ConcertController {
         }
     }
     
-    @GetMapping("/concerts/getAll/")
+    @GetMapping("/concerts/getAll")
     public List<Event> getAllEvents() {
         return eventService.getAllEvents();
     }

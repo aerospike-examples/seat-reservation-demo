@@ -401,7 +401,7 @@ public class AerospikeService {
             cache.updateSeat(sectionId, row, seatNumber, newStatus);
         }
         notifierService.sendMessage("statusChange", 
-                String.format("%d-%d-%d:%d", sectionId, row, seatNumber, newStatus.getValue()));
+            String.format("%s:%d-%d-%d:%d", eventId, sectionId, row, seatNumber, newStatus.getValue()));
     }
 
     /**

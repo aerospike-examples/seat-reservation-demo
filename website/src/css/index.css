@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Kanit:wght@700&display=swap');
+
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-image: url('/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+h1 {
+    font-family: 'Kanit', sans-serif;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #333;
+    text-align: center;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.2em;
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+a {
+  text-decoration: none;
+}
+.portal {
+  position: relative;
+  z-index: 200;
+}

@@ -1,0 +1,15 @@
+.concertSeatingSection {
+    border: 1px solid #ddd;
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.concertSeatingSectionSeats {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 1px;
+    flex-grow: 1;
+}

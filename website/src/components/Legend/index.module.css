@@ -1,0 +1,19 @@
+/* Shared legend styles (seating chart & seat selection modal legends) */
+.legend {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+}
+
+.legendItem svg {
+    margin-right: 5px;
+}
