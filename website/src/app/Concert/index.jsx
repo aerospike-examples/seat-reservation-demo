@@ -3,14 +3,14 @@ import styles from "./index.module.css";
 import { Navigate, useLoaderData, useLocation } from "react-router-dom";
 
 export const concertLoader = async (params) => {
-    const { artist, id } = params;
-    let response = await fetch(`/concerts/${id}/seats`);
-    let seats = await response.json();
-    return { artist, seats, id }
+    const { artist, eventID } = params;
+    let response = await fetch(`/concerts/${eventID}/seats`);
+    let sections = await response.json();
+    return { artist, sections, eventID }
 }
 
 const Concert = () => {
-    const { artist, seats, id } = useLoaderData();
+    const { artist, sections, eventID } = useLoaderData();
     const { state } = useLocation();
     if(!state) return <Navigate to="/events" /> 
     const { description, date, title } = state;
@@ -31,7 +31,7 @@ const Concert = () => {
                 </strong>
             </div>
         </div>
-        <Venue seats={seats} eventID={id} />
+        <Venue sections={sections} eventID={eventID} />
         </>
     )
 }

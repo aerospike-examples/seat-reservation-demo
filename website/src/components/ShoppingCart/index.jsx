@@ -26,7 +26,7 @@ const ShoppingCart = ({updateSeats, eventID, closeModal}) => {
 
     return (
         <div className={styles.cartItems}>
-            <h3>Shoping Cart</h3>
+            <h3>Shopping Cart</h3>
             {cartItems.map(item => {
               const [secNum, rowNum, seatNum] = item.split("-");
               let section = String.fromCharCode(parseInt(secNum) + 65);
@@ -41,7 +41,7 @@ const ShoppingCart = ({updateSeats, eventID, closeModal}) => {
               Total: $<span className={styles.shoppingCartTotalAmount}>{total}.00</span>
             </div>
             <div className={styles.shoppingCartActions}>
-                <button className={clsx(styles.shoppingCartButton, styles.checkout)} onClick={purchase}>Submit Payment</button>
+                <button className={clsx(styles.shoppingCartButton, styles.checkout)} onClick={purchase} disabled={cartItems.length < 1}>Submit Payment</button>
                 <button className={clsx(styles.shoppingCartButton, styles.abandonCart)} onClick={abandon}>Abandon Cart</button>
             </div>
         </div>

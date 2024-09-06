@@ -294,7 +294,7 @@ public class ConcertController {
         }
     }
         
-    @GetMapping("/register")
+    @GetMapping("/concerts/updates")
     public @ResponseBody SseEmitter register() {
         return notifierService.register();
     }

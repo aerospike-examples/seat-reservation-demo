@@ -14,7 +14,7 @@ const Routes = () => {
                 children: [
                     {index: true, element: <div />, loader: () => redirect("/events")},
                     {path: "events", element: <Concerts />, loader: () => concertsLoader()},
-                    {path: "events/:artist/:id", element: <Concert />, loader: ({params}) => concertLoader({...params})}
+                    {path: "events/:artist/:eventID", element: <Concert />, loader: ({params}) => concertLoader({...params})}
                 ]
             }]
         }
