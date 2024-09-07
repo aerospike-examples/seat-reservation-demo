@@ -11,12 +11,12 @@ const Logo = ({eventID}) => {
     const availableSeats = useRef([]);
     const { modalProps, ref, openModal } = useModal();
     const [running, setRunning] = useState(false);
-    const [workers, setWorkers] = useState(10);
-    const [seats, setSeats] = useState({min: 2, max: 10});
+    const [workers, setWorkers] = useState(50);
+    const [seats, setSeats] = useState({min: 2, max: 5});
     const [delay, setDelay] = useState(2);
     const [abandon, setAbandon] = useState(15);
     
-    const handleSeats = (key, value) => setSeats({...seats,[key]: value});
+    const handleSeats = (key, value) => setSeats(prev => ({...prev, [key]: value}));
     
     const getAvailableSeats = async () => {
         availableSeats.current = [];
@@ -54,11 +54,7 @@ const Logo = ({eventID}) => {
 
     const listenToWorker = (e) => {
         const { status, idx } = e.data;
-        if(status === "ok") runWorker(idx)
-        else {
-            worker.current[idx].terminate();
-            worker.current.splice(idx, 1);
-        }
+        if(status === "ok") runWorker(idx);
     }
 
     const startWorkers = async () => {
@@ -68,27 +64,30 @@ const Logo = ({eventID}) => {
         eventSource.current.addEventListener(eventID, handleSeatUpdate);
         for(let i = 0; i < workers; i++) {
             worker.current.push(new SimWorker());
-            worker.current[i].addEventListener("message", listenToWorker)
+            worker.current[i].addEventListener("message", listenToWorker);
+            runWorker(i);
+            await new Promise(r => setTimeout(r, 500))
         }
     }
 
     const stopWorkers = () => {
         setRunning(false);
         eventSource.current.removeEventListener(eventID, handleSeatUpdate);
-        for(let i = 0; i < workers; i++) {
+        for(let i = 0; i < worker.current.length; i++) {
             worker.current[i].terminate();
         }
         worker.current = [];
     }
 
-    const resetEvent = () => {
-        fetch("/rpc/resetConcert", {
+    const resetEvent = async () => {
+        await fetch("/rpc/resetConcert", {
 			headers: {
 				"Content-Type": "application/json"
 			},
 			method: 'POST',
 			body: JSON.stringify({concertId: eventID})
         })
+        location.reload();
     }
 
     return (
@@ -135,7 +134,11 @@ const Logo = ({eventID}) => {
                         </label>
                     </div>
                     <div className={styles.controls}>
-                        <button className={clsx(styles.button, styles[running ? "stop" : "start"])} onClick={running ? stopWorkers : startWorkers} disabled={!eventID}>{running ? "Stop" : "Start"}</button>
+                        {running ?
+                            <button className={clsx(styles.button, styles.stop)} onClick={stopWorkers} disabled={!eventID}>Stop</button>
+                            :
+                            <button className={clsx(styles.button, styles.start)} onClick={startWorkers} disabled={!eventID}>Start</button>
+                        }
                         <button className={clsx(styles.button, styles.buttonSecondary)} onClick={resetEvent} disabled={!eventID}>Reset Event</button>
                     </div>
                 </div>

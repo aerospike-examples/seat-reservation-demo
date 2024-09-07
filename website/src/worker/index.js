@@ -2,7 +2,7 @@ const sleep = (seconds) =>  new Promise(r => setTimeout(r, seconds * 1000))
 
 const addToCart = async (cartID, numSeats, eventID, available, attempt = 0) => {
     let seats = [];
-    let idx = Math.floor(Math.random * (0 + (available.length - numSeats) - 1));        
+    let idx = Math.floor(Math.random() * (0 + (available.length - numSeats) - 1)); 
     for(let i = 0; i < numSeats; i++) seats.push(available[idx + i]);
     let response = await fetch(`https://ticket-website.aerospike.com/concerts/${eventID}/shopping-carts`, {
         headers: {

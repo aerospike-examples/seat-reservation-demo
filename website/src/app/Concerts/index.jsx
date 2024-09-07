@@ -20,6 +20,7 @@ const Concerts = () => {
 
     return (
         <>
+        <img src="/logo.png" alt="Ticketfaster Logo" className={styles.logo} />
         <h1 style={{marginBottom: "30px"}}>Upcoming Concerts</h1>
         <div className={styles.concertList}>
           {Object.keys(concerts).map(artist => (
