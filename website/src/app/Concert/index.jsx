@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Logo from "../../components/Logo";
 import Venue from "../../components/Venue";
 import styles from "./index.module.css";
@@ -6,19 +7,21 @@ import { Navigate, useLoaderData, useLocation } from "react-router-dom";
 export const concertLoader = async (params) => {
     const { artist, eventID } = params;
     let response = await fetch(`/concerts/${eventID}/seats`);
-    let sections = await response.json();
-    return { artist, sections }
+    let data = await response.json();
+    return { artist, data }
 }
 
 const Concert = () => {
-    const { artist, sections } = useLoaderData();
+    const { artist, data } = useLoaderData();
     const { state } = useLocation();
+    const [sections, setSections] = useState(data);
+    const [venueKey, setVenueKey] = useState(0);
     if(!state) return <Navigate to="/events" /> 
     const { description, date, title, eventID } = state;
 
     return (
         <>
-        <Logo {...state} />
+        <Logo eventID={eventID} setSections={setSections} setVenueKey={setVenueKey} />
         <div className={styles.concertHeader}>
             <h1>{artist}: {title}</h1>
             <div className={styles.concertHeaderDetails}>
@@ -33,7 +36,7 @@ const Concert = () => {
                 </strong>
             </div>
         </div>
-        <Venue sections={sections} eventID={eventID} />
+        <Venue sections={sections} eventID={eventID} key={venueKey} />
         </>
     )
 }

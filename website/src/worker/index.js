@@ -1,8 +1,10 @@
+import { v4 as uuidv4 } from 'uuid';
+
 const sleep = (seconds) =>  new Promise(r => setTimeout(r, seconds * 1000))
 
 const addToCart = async (cartID, numSeats, eventID, available, attempt = 0) => {
     let seats = [];
-    let idx = Math.floor(Math.random() * (0 + (available.length - numSeats) - 1)); 
+    let idx = Math.floor(Math.random() * (available.length - numSeats));
     for(let i = 0; i < numSeats; i++) seats.push(available[idx + i]);
     let response = await fetch(`https://ticket-website.aerospike.com/concerts/${eventID}/shopping-carts`, {
         headers: {
@@ -41,19 +43,25 @@ const abandonSeats = async (cartID, eventID) => {
 
 const simulateUser = async (delay, seats, abandon, eventID, available) => {
     return new Promise(async (resolve, reject) => {
-        let cartID = Math.floor(Math.random() * (Math.random() * 100000000000)).toString();
+        let cartID = uuidv4();
         addToCart(cartID, seats, eventID, available)
-        .then( async () => {
+        .then(async () => {
             await sleep(delay);
             let random = Math.random();
             if(random < (abandon / 100)){
-                await abandonSeats(cartID, eventID);
+                abandonSeats(cartID, eventID)
+                .then(async () => {
+                    await sleep(delay);
+                    resolve();
+                }, (err) => console.error(err));
             }
             else {
-                await purchaseSeats(cartID, eventID);
+                purchaseSeats(cartID, eventID)
+                .then(async () => {
+                    await sleep(delay);
+                    resolve();
+                }, (err) => console.error(err));
             }
-            await sleep(delay);
-            resolve();
         }, (err) => reject(err));
     });
 }

@@ -42,8 +42,8 @@ const Venue = ({sections, eventID}) => {
     return (
 		<div className={styles.venue}>
 			<div className={styles.concertStage}>STAGE</div>
-			<div className={styles.concertSeatingSections}>
 			<Legend className={styles.legend}/>
+			<div className={styles.concertSeatingSections}>
 			{seatMap.map((rows, section) => (
 				<Section 
 					key={section} 

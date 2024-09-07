@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
 export const CartContext = createContext(null);
 
@@ -8,7 +9,7 @@ const CartProvider = ({children}) => {
 
 	const createSessionCart = (eventID) => {
 		let shoppingCart = {
-			cartID: Math.floor(Math.random() * (Math.random() * 100000000000)).toString(), 
+			cartID: uuidv4(),
 			seats: [],
 			newCart: true
 		};

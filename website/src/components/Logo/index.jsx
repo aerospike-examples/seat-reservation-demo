@@ -5,11 +5,11 @@ import { useRef, useState } from "react";
 import clsx from "clsx";
 import SimWorker from "../../worker?worker";
 
-const Logo = ({eventID}) => {
+const Logo = ({eventID, setSections, setVenueKey}) => {
     const worker = useRef([]);
     const eventSource = useRef();
     const availableSeats = useRef([]);
-    const { modalProps, ref, openModal } = useModal();
+    const { modalProps, ref, openModal, closeModal } = useModal();
     const [running, setRunning] = useState(false);
     const [workers, setWorkers] = useState(50);
     const [seats, setSeats] = useState({min: 2, max: 5});
@@ -62,11 +62,12 @@ const Logo = ({eventID}) => {
         await getAvailableSeats();
         eventSource.current = new EventSource("/concerts/updates");
         eventSource.current.addEventListener(eventID, handleSeatUpdate);
+        closeModal();
         for(let i = 0; i < workers; i++) {
             worker.current.push(new SimWorker());
             worker.current[i].addEventListener("message", listenToWorker);
             runWorker(i);
-            await new Promise(r => setTimeout(r, 500))
+            await new Promise(r => setTimeout(r, 300))
         }
     }
 
@@ -87,7 +88,10 @@ const Logo = ({eventID}) => {
 			method: 'POST',
 			body: JSON.stringify({concertId: eventID})
         })
-        location.reload();
+        let response = await fetch(`/concerts/${eventID}/seats`);
+        let data = await response.json();
+        setSections(data);
+        setVenueKey(prev => prev + 1);
     }
 
     return (
