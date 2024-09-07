@@ -1,5 +1,4 @@
 import Artist from "../../components/Artist";
-import artists from "../../assets/artists.json";
 import styles from "./index.module.css";
 import { useLoaderData } from "react-router-dom";
 
