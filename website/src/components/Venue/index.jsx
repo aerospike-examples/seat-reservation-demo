@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"; 
 import Section from "../Section";
 import styles from "./index.module.css";
@@ -29,13 +28,10 @@ const Venue = ({sections, eventID}) => {
 
    	useEffect(() => {
 		getEventCart(eventID);
-
-       	if(!eventSource.current) {
-			eventSource.current = new EventSource("/concerts/updates");
-			eventSource.current.addEventListener(eventID, handleMessage);	
-			return () => {
-				eventSource.current.removeEventListener(eventID, handleMessage)
-			}
+		eventSource.current = new EventSource("/concerts/updates");
+		eventSource.current.addEventListener(eventID, handleMessage);	
+		return () => {
+			eventSource.current.removeEventListener(eventID, handleMessage)
 		}
    	}, [])
 

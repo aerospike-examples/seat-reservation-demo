@@ -21,7 +21,7 @@ const Concert = () => {
 
     return (
         <>
-        <Logo eventID={eventID} setSections={setSections} setVenueKey={setVenueKey} />
+        <Logo eventID={eventID} setSections={setSections} setVenueKey={setVenueKey}/>
         <div className={styles.concertHeader}>
             <h1>{artist}: {title}</h1>
             <div className={styles.concertHeaderDetails}>

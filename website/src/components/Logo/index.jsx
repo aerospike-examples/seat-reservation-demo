@@ -90,6 +90,7 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
         })
         let response = await fetch(`/concerts/${eventID}/seats`);
         let data = await response.json();
+        sessionStorage.removeItem(eventID);
         setSections(data);
         setVenueKey(prev => prev + 1);
     }
