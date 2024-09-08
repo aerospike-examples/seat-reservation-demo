@@ -24,6 +24,7 @@ public class NotifierService {
                             emitter.send(SseEmitter.event().name(message.name).data(message.message));
                         }
                         catch (IOException e) {
+                            emitter.completeWithError(e);
                             emitters.remove(emitter);
                         }
                     }
@@ -55,8 +56,12 @@ public class NotifierService {
 
     public SseEmitter register() {
         SseEmitter emitter = new SseEmitter();
-        emitters.add(emitter);
         emitter.onCompletion(() -> removeEmitter(emitter));
+        emitter.onTimeout(() -> {
+            emitter.complete();
+            emitters.remove(emitter);
+        });
+        emitters.add(emitter);
         System.out.println("Registering client to emit to");
         return emitter;
     }
