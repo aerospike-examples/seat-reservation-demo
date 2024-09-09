@@ -1,12 +1,21 @@
 import { v4 as uuidv4 } from 'uuid';
 
+const apiUrl = import.meta.env.VITE_APP_API_URL;
 const sleep = (seconds) =>  new Promise(r => setTimeout(r, seconds * 1000))
 
-const addToCart = async (cartID, numSeats, eventID, available, attempt = 0) => {
+const getSeats = (numSeats, available) => {
     let seats = [];
     let idx = Math.floor(Math.random() * (available.length - numSeats));
-    for(let i = 0; i < numSeats; i++) seats.push(available[idx + i]);
-    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    for(let i = 0; i < numSeats; i++) {
+        let seat = available[idx + i];
+        if(seat) seats.push(seat);
+    };
+    if(seats.length < 1) return getSeats(numSeats, available)
+    return seats
+}
+
+const addToCart = async (cartID, numSeats, eventID, available) => {
+    let seats = getSeats(numSeats, available);
     let response = await fetch(`${apiUrl}/concerts/${eventID}/shopping-carts`, {
         headers: {
             "Content-Type": "application/json"
@@ -15,15 +24,10 @@ const addToCart = async (cartID, numSeats, eventID, available, attempt = 0) => {
         body: JSON.stringify({id: cartID, seats})
     })
     if(response.ok) return;
-    if(attempt < 5) {
-        attempt++;
-        return await addToCart(cartID, numSeats, eventID, available, attempt)
-    }
-    throw new Error("fail");
+    throw new Error("Add to cart attempt failed");
 }
 
 const purchaseSeats = async (cartID, eventID) => {
-    const apiUrl = import.meta.env.VITE_APP_API_URL;
     let response = await fetch(`${apiUrl}/concerts/${eventID}/purchases`, {
         headers: {
             "Content-Type": "application/json"
@@ -32,16 +36,15 @@ const purchaseSeats = async (cartID, eventID) => {
         body: JSON.stringify({id: cartID})
     })
     if(response.ok) return
-    throw new Error("fail");
+    throw new Error("Purchase attempt failed");
 }
 
 const abandonSeats = async (cartID, eventID) => {
-    const apiUrl = import.meta.env.VITE_APP_API_URL;
     let response = await fetch(`${apiUrl}/${eventID}/shopping-carts/${cartID}`, {
         method: 'DELETE'
     })
     if(response.ok) return
-    throw new Error("fail");
+    throw new Error("Abandon attempt failed");
 }
 
 const simulateUser = async (delay, seats, abandon, eventID, available) => {
@@ -56,24 +59,24 @@ const simulateUser = async (delay, seats, abandon, eventID, available) => {
                 .then(async () => {
                     await sleep(delay);
                     resolve();
-                }, (err) => console.error(err));
+                }, (err) => reject(err));
             }
             else {
                 purchaseSeats(cartID, eventID)
                 .then(async () => {
                     await sleep(delay);
                     resolve();
-                }, (err) => console.error(err));
+                }, (err) => reject(err));
             }
         }, (err) => reject(err));
     });
 }
 
 self.onmessage = async (e) => {
-    const { idx, delay, seats, abandon, eventID, available} = e.data;
-    simulateUser(delay, seats, abandon, eventID, available)
+    const { idx, delay, seats, abandon, eventID, available, attempt} = e.data;
+    simulateUser(delay, seats, abandon, eventID, available, attempt)
     .then(
         () => self.postMessage({status: "ok", idx}),
-        () => self.postMessage({status: "fail", idx})
+        () => self.postMessage({status: attempt < 6 ? "retry" : "fail", idx, attempt})
     );
 };

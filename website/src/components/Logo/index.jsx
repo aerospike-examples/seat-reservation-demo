@@ -6,12 +6,13 @@ import clsx from "clsx";
 import SimWorker from "../../worker?worker";
 
 const Logo = ({eventID, setSections, setVenueKey}) => {
-    const worker = useRef([]);
+    const workers = useRef([]);
+    const failedWorkers = useRef(0);
     const eventSource = useRef();
     const availableSeats = useRef([]);
     const { modalProps, ref, openModal, closeModal } = useModal();
     const [running, setRunning] = useState(false);
-    const [workers, setWorkers] = useState(50);
+    const [numWorkers, setNumWorkers] = useState(50);
     const [seats, setSeats] = useState({min: 2, max: 5});
     const [delay, setDelay] = useState(2);
     const [abandon, setAbandon] = useState(15);
@@ -41,21 +42,32 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
         else availableSeats.current.splice(seatIdx, 1);
     }
     
-    const runWorker = (idx) => {
+    const runWorker = (idx, attempt = 0) => {
         let { min, max } = seats;
-        worker.current[idx].postMessage({
+        workers.current[idx].postMessage({
             idx,
             delay,
             seats: Math.floor(Math.random() * (1 + max - min)) + min,
             abandon,
             eventID,
-            available: availableSeats.current
+            available: availableSeats.current,
+            attempt
         });
     }
 
     const listenToWorker = (e) => {
-        const { status, idx } = e.data;
-        if(status === "ok") runWorker(idx);
+        const { status, idx, attempt } = e.data;
+        switch(status) {
+            case "ok":
+                return runWorker(idx);
+            case "retry":
+                return runWorker(idx, attempt + 1);
+            case "fail":
+                failedWorkers.current++;
+        }
+        if(failedWorkers.current === numWorkers) {
+            stopWorkers();
+        }
     }
 
     const startWorkers = async () => {
@@ -64,9 +76,10 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
         eventSource.current = new EventSource("/concerts/updates");
         eventSource.current.addEventListener(eventID, handleSeatUpdate);
         closeModal();
-        for(let i = 0; i < workers; i++) {
-            worker.current.push(new SimWorker());
-            worker.current[i].addEventListener("message", listenToWorker);
+        failedWorkers.current = 0;
+        for(let i = 0; i < numWorkers; i++) {
+            workers.current.push(new SimWorker());
+            workers.current[i].addEventListener("message", listenToWorker);
             runWorker(i);
             await new Promise(r => setTimeout(r, 300))
         }
@@ -75,10 +88,10 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
     const stopWorkers = () => {
         setRunning(false);
         eventSource.current.removeEventListener(eventID, handleSeatUpdate);
-        for(let i = 0; i < worker.current.length; i++) {
-            worker.current[i].terminate();
+        for(let i = 0; i < numWorkers; i++) {
+            workers.current[i]?.terminate();
         }
-        worker.current = [];
+        workers.current = [];
     }
 
     const resetEvent = async () => {
@@ -107,8 +120,8 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
                         <label className={styles.option}>
                             <span>Workers </span>
                             <div className={styles.input}>
-                                <span>{workers}</span>
-                                <input type="range" min={1} max={100} value={workers} onChange={(e) => setWorkers(e.currentTarget.value)} disabled={running}/>
+                                <span>{numWorkers}</span>
+                                <input type="range" min={1} max={100} value={numWorkers} onChange={(e) => setNumWorkers(e.currentTarget.value)} disabled={running}/>
                             </div>
                         </label>
                         <label className={styles.option}>

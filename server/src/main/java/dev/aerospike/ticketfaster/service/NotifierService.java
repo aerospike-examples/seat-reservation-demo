@@ -45,16 +45,19 @@ public class NotifierService {
     // }
 
     public void sendMessage(String name, String message) {
-        emitters.forEach(emitter -> {
-            try {
-                System.out.printf("sending: %s->%s\n", name, message);
-                emitter.send(SseEmitter.event().name(name).data(message));
-            }
-            catch (Exception e) {
-                emitter.completeWithError(e);
-                emitters.remove(emitter);
-            }
-        });
+        new Thread(() -> {
+            emitters.forEach(emitter -> {
+                try {
+                    System.out.printf("sending: %s->%s\n", name, message);
+                    emitter.send(SseEmitter.event().name(name).data(message));
+                }
+                catch (Exception e) {
+                    System.out.print(e);
+                    emitter.completeWithError(e);
+                    emitters.remove(emitter);
+                }
+            });
+        }).start();
     }
     
     private void removeEmitter(SseEmitter emitter) {
