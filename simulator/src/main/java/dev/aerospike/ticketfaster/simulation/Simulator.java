@@ -23,7 +23,7 @@ public class Simulator implements Runnable {
             names = {"-i", "--init-reset"},
             description = "Initialize and reset the concert"
     )
-    private boolean shouldInitAndReset = true;
+    private boolean shouldInitAndReset = false;
 
     @CommandLine.Option(
             names = {"-t", "--threads"},
@@ -36,7 +36,25 @@ public class Simulator implements Runnable {
             description = "Number of seats",
             defaultValue = "30")
     private int numOfSeats = 30;
+    
+    @CommandLine.Option(
+            names = {"-H", "--host"},
+            description = "The host to connect to for server calls. Defaults to 'https://ticket-website.aerospike.com'",
+            defaultValue = "https://ticket-website.aerospike.com")
+    private String host = "https://ticket-website.aerospike.com";
+    
+    @CommandLine.Option(
+            names = {"-d", "--delay"},
+            description = "Delay in milliseconds on each thread between purchasing blocks of tickets (0 for no delay, default 2000)",
+            defaultValue = "2000")
+    private int delay = 2000;
 
+    @CommandLine.Option(
+            names = {"-c", "--concert"},
+            description = "Concert to book seats at. Defaults to 'Oasis-one-day'",
+            defaultValue = "Oasis-one-day")
+    private String concert = "Oasis-one-day";
+    
     public static void main(String[] args) {
         // Triggers the CLI
         int exitCode = new CommandLine(new Simulator()).execute(args);
@@ -47,26 +65,35 @@ public class Simulator implements Runnable {
     public void run() {
         try {
             System.out.printf("Executing with the following args: \n" +
+                    "concert id: %s\n" + 
+                    "server host: %s\n" +
                     "shouldInitAndReset: %b \n" +
                     "numOfThreads: %d \n" +
-                    "numOfSeats: %d \n%n", shouldInitAndReset, numOfThreads, numOfSeats);
+                    "numOfSeats: %d \n" +
+                    "delay: %d\n%n", 
+                    concert, host, shouldInitAndReset, numOfThreads, numOfSeats, delay);
 
-            execute(shouldInitAndReset, numOfThreads, numOfSeats);
+            execute(concert, host, delay, shouldInitAndReset, numOfThreads, numOfSeats);
         } catch (Exception e) {
             System.err.println("Execution failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public void execute(boolean shouldInitAndReset, int numOfThreads, int numOfSeats) throws Exception {
+    public void execute(String concertId,
+            String host,
+            int delay, 
+            boolean shouldInitAndReset, 
+            int numOfThreads, 
+            int numOfSeats) throws Exception {
+        
         HttpClient client = HttpClient.newHttpClient();
-        String concertId = "Oasis-one-day";
 
         if (shouldInitAndReset) {
             System.out.println("Initializing...");
-            init(client);
+            init(client, host);
             System.out.println("Reset concert information...");
-            resetConcert(client, concertId);
+            resetConcert(client, concertId, host);
         }
 
         // Create an ExecutorService with a fixed thread pool
@@ -78,8 +105,8 @@ public class Simulator implements Runnable {
                 try {
                     while (true) {
                         try {
-                            reserveAndPurchaseSeats(client, numOfSeats, concertId);
-                            TimeUnit.SECONDS.sleep(2);
+                            reserveAndPurchaseSeats(client, numOfSeats, concertId, host);
+                            TimeUnit.MILLISECONDS.sleep(delay);
                         } catch (SimulatorStopException e) {
                             System.out.println("Simulator finished execution, not enough seats left");
                             return;
@@ -104,9 +131,14 @@ public class Simulator implements Runnable {
         }
     }
 
-    private void init(HttpClient client) throws Exception {
+    /**
+     * Re-initialize the concert back to default values. 
+     * @param client
+     * @throws Exception
+     */
+    private void init(HttpClient client, String host) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("https://ticket-website.aerospike.com/rpc/init"))
+                .uri(new URI(host + "/rpc/init"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -119,7 +151,7 @@ public class Simulator implements Runnable {
         }
     }
 
-    private void resetConcert(HttpClient client, String concertId) throws Exception {
+    private void resetConcert(HttpClient client, String concertId, String host) throws Exception {
         ResetConcertRequest requestModel = new ResetConcertRequest();
         requestModel.setConcertId(concertId);
 
@@ -128,7 +160,7 @@ public class Simulator implements Runnable {
         String concertJson = objectMapper.writeValueAsString(requestModel);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("https://ticket-website.aerospike.com/rpc/resetConcert"))
+                .uri(new URI(host + "/rpc/resetConcert"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(concertJson))
@@ -141,17 +173,17 @@ public class Simulator implements Runnable {
         }
     }
 
-    private void reserveAndPurchaseSeats(HttpClient client, int numOfSeats, String concertId) throws Exception {
+    private void reserveAndPurchaseSeats(HttpClient client, int numOfSeats, String concertId, String host) throws Exception {
         System.out.println("Creating shopping cart for concertId: %s with numOfSeats: %d..."
                 .formatted(concertId, numOfSeats));
-        ShoppingCartCreateResponse cart = createShoppingCart(client, concertId, numOfSeats);
+        ShoppingCartCreateResponse cart = createShoppingCart(client, concertId, numOfSeats, host);
 
         System.out.println("Finalizing purchase for concertId: %s, cartId: %s..."
                 .formatted(concertId, cart.getShoppingCartId()));
-        finalizePurchase(client, concertId, cart.getShoppingCartId());
+        finalizePurchase(client, concertId, cart.getShoppingCartId(), host);
     }
 
-    private ShoppingCartCreateResponse createShoppingCart(HttpClient client, String concertId, int numOfSeats) throws Exception {
+    private ShoppingCartCreateResponse createShoppingCart(HttpClient client, String concertId, int numOfSeats, String host) throws Exception {
         ShoppingCartCreateRequest requestModel = new ShoppingCartCreateRequest();
         requestModel.setId(UUID.randomUUID().toString()); // generate random shopping cart id
         requestModel.setRandomSeatQuantity(numOfSeats);
@@ -160,7 +192,7 @@ public class Simulator implements Runnable {
         String cartJson = objectMapper.writeValueAsString(requestModel);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("https://ticket-website.aerospike.com/concerts/" + concertId + "/shopping-carts"))
+                .uri(new URI(host + "/concerts/" + concertId + "/shopping-carts"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(cartJson))
@@ -178,15 +210,15 @@ public class Simulator implements Runnable {
         return objectMapper.readValue(response.body(), ShoppingCartCreateResponse.class);
     }
 
-    private void finalizePurchase(HttpClient client, String concertId, String cartId) throws Exception {
+    private void finalizePurchase(HttpClient client, String concertId, String cartId, String host) throws Exception {
         ShoppingCartCreateRequest requestModel = new ShoppingCartCreateRequest();
         requestModel.setId(cartId);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String cartJson = objectMapper.writeValueAsString(requestModel);
-        TimeUnit.SECONDS.sleep(2);
+        TimeUnit.MILLISECONDS.sleep(delay);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("https://ticket-website.aerospike.com/concerts/" + concertId + "/purchases"))
+                .uri(new URI(host + "/concerts/" + concertId + "/purchases"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(cartJson))

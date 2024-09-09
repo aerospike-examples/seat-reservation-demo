@@ -27,7 +27,7 @@ const SeatMap = ({section, rows, updateSeats, className, eventID, onClick = () =
 				
 				return row.map((value, seat) => {
 					let seatID = `${rowID}-${seat}`
-					value = (value === 1 && seats.includes(seatID)) ? 3 : value;
+					value = (value === 1 && seats && seats.includes(seatID)) ? 3 : value;
 					
 					return <Seat key={seat} value={value} onClick={() => handleSeat(seatID, value)} />
 				})
