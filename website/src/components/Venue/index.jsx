@@ -22,7 +22,7 @@ const Venue = ({sections, eventID}) => {
       	let [seatID, value] = e.data.split(":");
 		let { seats } = getSessionCart(eventID);
 		
-		if(seats.includes(seatID)) return;
+		if(seats?.includes(seatID)) return;
 		updateSeatMap([{seatID, value: parseInt(value)}]);
    	}
 
