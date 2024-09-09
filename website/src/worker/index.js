@@ -6,7 +6,8 @@ const addToCart = async (cartID, numSeats, eventID, available, attempt = 0) => {
     let seats = [];
     let idx = Math.floor(Math.random() * (available.length - numSeats));
     for(let i = 0; i < numSeats; i++) seats.push(available[idx + i]);
-    let response = await fetch(`https://ticket-website.aerospike.com/concerts/${eventID}/shopping-carts`, {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/shopping-carts`, {
         headers: {
             "Content-Type": "application/json"
         },
@@ -22,7 +23,8 @@ const addToCart = async (cartID, numSeats, eventID, available, attempt = 0) => {
 }
 
 const purchaseSeats = async (cartID, eventID) => {
-    let response = await fetch(`https://ticket-website.aerospike.com/concerts/${eventID}/purchases`, {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/purchases`, {
         headers: {
             "Content-Type": "application/json"
         },
@@ -34,7 +36,8 @@ const purchaseSeats = async (cartID, eventID) => {
 }
 
 const abandonSeats = async (cartID, eventID) => {
-    let response = await fetch(`https://ticket-website.aerospike.com/concerts/${eventID}/shopping-carts/${cartID}`, {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/${eventID}/shopping-carts/${cartID}`, {
         method: 'DELETE'
     })
     if(response.ok) return

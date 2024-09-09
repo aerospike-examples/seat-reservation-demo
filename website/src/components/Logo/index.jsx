@@ -20,7 +20,8 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
     
     const getAvailableSeats = async () => {
         availableSeats.current = [];
-        let response = await fetch(`/concerts/${eventID}/seats`);
+        const apiUrl = import.meta.env.VITE_APP_API_URL;
+        let response = await fetch(`${apiUrl}/concerts/${eventID}/seats`);
         let data = await response.json();
         for(let i = 0; i < data.length; i++) {
             for(let j = 0; j < data[i].length; j++) {
@@ -88,7 +89,8 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
 			method: 'POST',
 			body: JSON.stringify({concertId: eventID})
         })
-        let response = await fetch(`/concerts/${eventID}/seats`);
+        const apiUrl = import.meta.env.VITE_APP_API_URL;
+        let response = await fetch(`${apiUrl}/concerts/${eventID}/seats`);
         let data = await response.json();
         sessionStorage.removeItem(eventID);
         setSections(data);
