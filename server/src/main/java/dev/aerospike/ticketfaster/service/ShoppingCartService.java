@@ -133,40 +133,58 @@ public class ShoppingCartService {
         }
         catch (Exception e) {
             System.err.printf("Error occurred during booking: %s (%s)\n", e.getMessage(), e.getClass());
-            e.printStackTrace();
             aerospikeService.rollbackTxn(txn);
             throw e;
         }
     }
     
     public void purchaseBooking(ShoppingCart shoppingCart, Txn txn) {
-        final Txn txnToUse = (txn == null) ? new Txn() : txn;
-        try {
-            shoppingCart.setStatus(Status.PURCHASED);
-            for (Seat thisSeat : shoppingCart.getSeats()) {
-                aerospikeService.setSeatStatus(
-                        shoppingCart.getEventId(), 
-                        getCustId(shoppingCart.getCustId(),shoppingCart.getId()),
-                        thisSeat.getSectionId(),
-                        thisSeat.getRow(), 
-                        thisSeat.getSeatNumber(), 
-                        SeatStatus.PURCHASED, 
-                        txnToUse);
+        // Since seats are stored in rows, with each row being a record,
+        // it is still possible to get MRT exceptions on purchasing a booking.
+        // (For example, start the transaction on one seat, the second seat is
+        // on a seat in a different row, this one is already locked doing a booking)
+        // So we retry multiple times as this operation should eventually succeed.
+        int MAX_RETRIES = 15;
+        RuntimeException lastException = null;
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            final Txn txnToUse = (txn == null) ? new Txn() : txn;
+            try {
+                shoppingCart.setStatus(Status.PURCHASED);
+                for (Seat thisSeat : shoppingCart.getSeats()) {
+                    aerospikeService.setSeatStatus(
+                            shoppingCart.getEventId(), 
+                            getCustId(shoppingCart.getCustId(),shoppingCart.getId()),
+                            thisSeat.getSectionId(),
+                            thisSeat.getRow(), 
+                            thisSeat.getSeatNumber(), 
+                            SeatStatus.PURCHASED, 
+                            txnToUse);
+                }
+                shoppingCart.getSeats().clear();
+                aerospikeService.save(null, shoppingCart, txnToUse);
+                aerospikeService.commitTxn(txnToUse);
+                return;
             }
-            shoppingCart.getSeats().clear();
-            aerospikeService.save(null, shoppingCart, txnToUse);
-            aerospikeService.commitTxn(txnToUse);
+            catch (RuntimeException e) {
+                System.out.printf("Retrying purchaseBooking transaction, %d of %d%n", (i+1), MAX_RETRIES);
+                // Note that if the commit fails, we do not need to call abort, but it doesn't hurt
+                // to do so. It's possible that another exception has occurred, and we might need to rollback.
+                aerospikeService.rollbackTxn(txnToUse);
+                lastException = e;
+                try {
+                    Thread.sleep(ThreadLocalRandom.current().nextInt(10)+2);
+                } catch (InterruptedException e1) {
+                    break;
+                }
+            }
         }
-        catch (Exception e) {
-            System.err.printf("Error occurred during booking: %s (%s)\n", e.getMessage(), e.getClass());
-            e.printStackTrace();
-            aerospikeService.rollbackTxn(txnToUse);
-            throw e;
-        }
+        System.err.printf("Error occurred during booking: %s (%s)\n", lastException.getMessage(), lastException.getClass());
+        lastException.printStackTrace();
+        throw lastException;
     }
     
     public List<Seat> findAndReserveRandomSeats(ShoppingCart cart, String eventId, int count) {
-        final int MAX_RETRIES = 10;
+        final int MAX_RETRIES = 30;
         Optional<Event> event = eventService.loadEvent(eventId);
         if (event.isEmpty()) {
             throw new IllegalArgumentException("Event must be provided");
