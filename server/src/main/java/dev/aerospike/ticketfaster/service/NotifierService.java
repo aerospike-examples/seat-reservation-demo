@@ -45,7 +45,6 @@ public class NotifierService {
     // }
 
     public void sendMessage(String name, String message) {
-        List<SseEmitter> failures = new ArrayList<>();
         emitters.forEach(emitter -> {
             try {
                 System.out.printf("sending: %s->%s\n", name, message);
@@ -53,10 +52,7 @@ public class NotifierService {
             }
             catch (Exception e) {
                 emitter.completeWithError(e);
-                failures.add(emitter);
-            }
-            if (!failures.isEmpty()) {
-                emitters.removeAll(failures);
+                emitters.remove(emitter);
             }
         });
     }
