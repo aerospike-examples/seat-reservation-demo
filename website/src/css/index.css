@@ -39,3 +39,19 @@ a {
   position: relative;
   z-index: 200;
 }
+kbd {
+  background-color: var(--aerospike-white);
+  border: 1px solid #808080;
+  border-right: 2px solid #606060;
+  border-bottom: 2px solid #606060;
+  border-radius: 4px;
+  color: #000000;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0;
+  padding: 2px 4px;
+  min-width: 20px;
+  text-align: center;
+  display: inline-block;
+}

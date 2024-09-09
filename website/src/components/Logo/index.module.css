@@ -10,7 +10,7 @@
     flex-direction: column;
     justify-content: space-between;
     flex: 1;
-    gap: 30px;
+    gap: 20px;
 }
 .options {
     display: flex;
@@ -86,4 +86,22 @@
 .start:disabled {
     background-color: rgba(173, 255, 47, .6);
     color: gray;
+}
+.shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.shortcutControls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.shortcutControls > span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.shortcutControls > .button {
+    width: 86px;
 }

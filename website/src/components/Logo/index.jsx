@@ -6,11 +6,14 @@ import clsx from "clsx";
 import SimWorker from "../../worker?worker";
 
 const Logo = ({eventID, setSections, setVenueKey}) => {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
     const workers = useRef([]);
     const failedWorkers = useRef(0);
     const eventSource = useRef();
     const availableSeats = useRef([]);
+    const isRunning = useRef(false);
     const { modalProps, ref, openModal, closeModal } = useModal();
+    const [shortcuts, setShortcuts] = useState(false);
     const [running, setRunning] = useState(false);
     const [numWorkers, setNumWorkers] = useState(50);
     const [seats, setSeats] = useState({min: 2, max: 5});
@@ -18,10 +21,9 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
     const [abandon, setAbandon] = useState(15);
     
     const handleSeats = (key, value) => setSeats(prev => ({...prev, [key]: value}));
-    
+
     const getAvailableSeats = async () => {
         availableSeats.current = [];
-        const apiUrl = import.meta.env.VITE_APP_API_URL;
         let response = await fetch(`${apiUrl}/concerts/${eventID}/seats`);
         let data = await response.json();
         for(let i = 0; i < data.length; i++) {
@@ -72,8 +74,9 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
 
     const startWorkers = async () => {
         setRunning(true);
+        isRunning.current = true;
         await getAvailableSeats();
-        eventSource.current = new EventSource("/concerts/updates");
+        eventSource.current = new EventSource(`${apiUrl}/concerts/updates`);
         eventSource.current.addEventListener(eventID, handleSeatUpdate);
         closeModal();
         failedWorkers.current = 0;
@@ -87,6 +90,7 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
 
     const stopWorkers = () => {
         setRunning(false);
+        isRunning.current = false;
         eventSource.current.removeEventListener(eventID, handleSeatUpdate);
         for(let i = 0; i < numWorkers; i++) {
             workers.current[i]?.terminate();
@@ -95,19 +99,40 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
     }
 
     const resetEvent = async () => {
-        await fetch("/rpc/resetConcert", {
+        await fetch(`${apiUrl}/rpc/resetConcert`, {
 			headers: {
 				"Content-Type": "application/json"
 			},
 			method: 'POST',
 			body: JSON.stringify({concertId: eventID})
         })
-        const apiUrl = import.meta.env.VITE_APP_API_URL;
         let response = await fetch(`${apiUrl}/concerts/${eventID}/seats`);
         let data = await response.json();
         sessionStorage.removeItem(eventID);
         setSections(data);
         setVenueKey(prev => prev + 1);
+    }
+
+    const handleKeys = (e) => {
+        switch(e.code) {
+            case "KeyS":
+                if(!isRunning.current) return startWorkers();
+                break;
+            case "KeyT":
+                if(isRunning.current) return stopWorkers();
+                break;
+            case "KeyR":
+                if(!isRunning.current) return resetEvent();
+                break;
+            default:
+                return;
+        }
+    }
+
+    const toggleShortcuts = () => {
+        setShortcuts(!shortcuts);
+        if(shortcuts) document.addEventListener("keydown", handleKeys);
+        else document.removeEventListener("keydown", handleKeys);
     }
 
     return (
@@ -116,36 +141,45 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
         {modalProps.open &&
             <Modal {...modalProps} ref={ref} title="Simulator">
                 <div className={styles.container}>
+                    <div className={styles.shortcuts}>
+                        <span>Keybord shortcuts</span>
+                        <div className={styles.shortcutControls}>
+                            <button className={styles.button} onClick={toggleShortcuts}>{shortcuts ? "Disable" : "Enable"}</button>
+                            <span><kbd>s</kbd>tart</span>
+                            <span>s<kbd>t</kbd>op</span>
+                            <span><kbd>r</kbd>eset</span>    
+                        </div>                   
+                    </div>
                     <div className={styles.options}>
-                        <label className={styles.option}>
+                        <label className={styles.option} title="Total workers to deploy">
                             <span>Workers </span>
                             <div className={styles.input}>
                                 <span>{numWorkers}</span>
                                 <input type="range" min={1} max={100} value={numWorkers} onChange={(e) => setNumWorkers(e.currentTarget.value)} disabled={running}/>
                             </div>
                         </label>
-                        <label className={styles.option}>
+                        <label className={styles.option} title="Min value in range for random seat selection">
                             <span>Seat Min </span>
                             <div className={styles.input}>
                                 <span>{seats.min}</span>
                                 <input type="range" min={1} max={seats.max} value={seats.min} onChange={(e) => handleSeats("min", e.currentTarget.value)} disabled={running}/>
                             </div>
                         </label>
-                        <label className={styles.option}>
+                        <label className={styles.option} title="Max value in range for random seat selection">
                             <span>Seat Max </span>
                             <div className={styles.input}>
                                 <span>{seats.max}</span>
                                 <input type="range" min={seats.min} max={20} value={seats.max} onChange={(e) => handleSeats("max", e.currentTarget.value)} disabled={running}/>
                             </div>
                         </label>
-                        <label className={styles.option}>
+                        <label className={styles.option} title="Delay, in seconds, between adding to cart and purchase | abandon">
                             <span>Delay </span>
                             <div className={styles.input}>
                                 <span>{delay}s</span>
                                 <input type="range" min={1} max={20} value={delay} onChange={(e) => setDelay(e.currentTarget.value)} disabled={running}/>
                             </div>
                         </label>
-                        <label className={styles.option}>
+                        <label className={styles.option} title="Percent of abandoned carts">
                             <span>Abandon </span>
                             <div className={styles.input}>
                                 <span>{abandon}%</span>

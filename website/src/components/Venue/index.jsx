@@ -5,6 +5,7 @@ import Legend from "../Legend";
 import { useCart } from "../../hooks/useCart";
 
 const Venue = ({sections, eventID}) => {
+	const apiUrl = import.meta.env.VITE_APP_API_URL;
     const [seatMap, setSeatMap] = useState(sections);
     const { getEventCart, getSessionCart } = useCart();
 	const eventSource = useRef(null);
@@ -28,7 +29,7 @@ const Venue = ({sections, eventID}) => {
 
    	useEffect(() => {
 		getEventCart(eventID);
-		eventSource.current = new EventSource("/concerts/updates");
+		eventSource.current = new EventSource(`${apiUrl}/concerts/updates`);
 		eventSource.current.addEventListener(eventID, handleMessage);	
 		return () => {
 			eventSource.current.removeEventListener(eventID, handleMessage)
