@@ -1,31 +1,33 @@
 .venue {
-    padding-top: 10px;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .concertStage {
     width: 60%;
     height: 50px;
     background-color: #272727;
-    margin: 0 auto 60px;
+    margin: 0 auto;
     border-radius: 50% 50% 0 0;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 1rem;
 }
 
 .concertSeatingSections {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     position: relative;
 }
 
 .legend {
-    position: absolute;
-    top: -50px;
-    right: 0;
+    margin-left: auto;
 }

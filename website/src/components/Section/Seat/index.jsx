@@ -1,12 +1,7 @@
-import { useCart } from "../../../hooks/useCart";
 import styles from "./index.module.css";
 import clsx from "clsx";
 
-const Seat = ({value, seatID, handleSeat}) => {
-    const { cartItems } = useCart();
-    if(value === 1 && cartItems.includes(seatID)) {
-      value = 3;
-    }
+const Seat = ({value, onClick}) => {
     const seatStatus = {
       0: "seatAvailable",
       1: "seatInCart",
@@ -14,7 +9,7 @@ const Seat = ({value, seatID, handleSeat}) => {
       3: "seatInYourCart"
     }
     return (
-      <div className={clsx(styles.seat, styles[seatStatus[value]])} onClick={() => handleSeat(seatID, value)}>
+      <div className={clsx(styles.seat, styles[seatStatus[value]])} onClick={onClick}>
         <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <path d="M10,30 L10,90 L90,90 L90,30 L80,30 L80,10 L20,10 L20,30 Z"></path>
             <path d="M15,35 L85,35 L85,85 L15,85 Z" fill="#FFFFFF" fillOpacity="0.2"></path>

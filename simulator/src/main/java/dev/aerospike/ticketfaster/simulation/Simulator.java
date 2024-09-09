@@ -79,6 +79,7 @@ public class Simulator implements Runnable {
                     while (true) {
                         try {
                             reserveAndPurchaseSeats(client, numOfSeats, concertId);
+                            TimeUnit.SECONDS.sleep(2);
                         } catch (SimulatorStopException e) {
                             System.out.println("Simulator finished execution, not enough seats left");
                             return;
@@ -105,7 +106,7 @@ public class Simulator implements Runnable {
 
     private void init(HttpClient client) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/rpc/init"))
+                .uri(new URI("https://ticket-website.aerospike.com/rpc/init"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.noBody())
@@ -127,7 +128,7 @@ public class Simulator implements Runnable {
         String concertJson = objectMapper.writeValueAsString(requestModel);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/rpc/resetConcert"))
+                .uri(new URI("https://ticket-website.aerospike.com/rpc/resetConcert"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(concertJson))
@@ -159,7 +160,7 @@ public class Simulator implements Runnable {
         String cartJson = objectMapper.writeValueAsString(requestModel);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/concerts/" + concertId + "/shopping-carts"))
+                .uri(new URI("https://ticket-website.aerospike.com/concerts/" + concertId + "/shopping-carts"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(cartJson))
@@ -183,9 +184,9 @@ public class Simulator implements Runnable {
 
         ObjectMapper objectMapper = new ObjectMapper();
         String cartJson = objectMapper.writeValueAsString(requestModel);
-
+        TimeUnit.SECONDS.sleep(2);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8080/concerts/" + concertId + "/purchases"))
+                .uri(new URI("https://ticket-website.aerospike.com/concerts/" + concertId + "/purchases"))
                 .header("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(cartJson))

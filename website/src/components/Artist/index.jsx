@@ -9,7 +9,7 @@ const Artist = ({artist, shows}) => {
 			const { id, title, date, venue: { description } } = show;
 			return (
 				<div className={styles.concertListItem} key={id}>				
-					<Link to={`/events/${artist}/${id}`} state={{ description, date, title }}><h3>{title}</h3></Link>
+					<Link to={`/events/${artist}/${id}`} state={{ description, date, title, eventID: id }}><h3>{title}</h3></Link>
 					<p><strong>Venue: </strong> {description}</p>
 					<p><strong>Date: </strong> 
 					{new Date(date).toLocaleDateString('en-US', {

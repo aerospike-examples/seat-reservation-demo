@@ -400,8 +400,8 @@ public class AerospikeService {
         if (cache != null) {
             cache.updateSeat(sectionId, row, seatNumber, newStatus);
         }
-        notifierService.sendMessage("statusChange", 
-            String.format("%s:%d-%d-%d:%d", eventId, sectionId, row, seatNumber, newStatus.getValue()));
+        notifierService.sendMessage(eventId, 
+            String.format("%d-%d-%d:%d", sectionId, row, seatNumber, newStatus.getValue()));
     }
 
     /**
