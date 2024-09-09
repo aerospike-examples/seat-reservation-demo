@@ -51,6 +51,7 @@ const CartProvider = ({children}) => {
 			setCartItems(seats);
 		})
 		.catch(() => {
+			setSessionCart([], eventID, true);
 			setCartItems([]);
 		});
 	}

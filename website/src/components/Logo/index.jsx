@@ -131,7 +131,7 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
 
     const toggleShortcuts = () => {
         setShortcuts(!shortcuts);
-        if(shortcuts) document.addEventListener("keydown", handleKeys);
+        if(!shortcuts) document.addEventListener("keydown", handleKeys);
         else document.removeEventListener("keydown", handleKeys);
     }
 
