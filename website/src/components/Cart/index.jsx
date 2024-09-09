@@ -2,6 +2,7 @@ import { createContext, useEffect, useRef, useState } from "react";
 
 export const CartContext = createContext(null);
 
+// eslint-disable-next-line react/prop-types
 const CartProvider = ({children}) => {
   const cartName = "ticket-faster-cart";
   const cartID = useRef();
@@ -39,11 +40,12 @@ const CartProvider = ({children}) => {
   }
 
   const addToCart = async (seatID, eventID, callback = () => {}) => {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
     let path;
     let shoppingCart = getSessionCart();
     let { carts } = shoppingCart;
-    if(carts[eventID]) path = `/concerts/${eventID}/shopping-carts/${cartID.current + eventID}/seats`;
-    else path = `/concerts/${eventID}/shopping-carts`;
+    if(carts[eventID]) path = `${apiUrl}/concerts/${eventID}/shopping-carts/${cartID.current + eventID}/seats`;
+    else path = `${apiUrl}/concerts/${eventID}/shopping-carts`;
     
     let response = await fetch(path, {
       headers: {
@@ -62,7 +64,8 @@ const CartProvider = ({children}) => {
   }
 
   const removeFromCart = async (seatID, eventID, callback) => {
-    let response = await fetch(`/concerts/${eventID}/shopping-carts/${cartID.current + eventID}/seats`, {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID.current + eventID}/seats`, {
       headers: {
         "Content-Type": "application/json"
       },
@@ -80,7 +83,8 @@ const CartProvider = ({children}) => {
   }
 
   const emptyCart = async (eventID, callback) => {
-    let response = await fetch(`/concerts/${eventID}/shopping-carts/${cartID.current + eventID}`, {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID.current + eventID}`, {
       method: 'DELETE'
     })
     if(response.ok) {
@@ -91,7 +95,8 @@ const CartProvider = ({children}) => {
   }
 
   const purchaseCart = async (eventID, callback) => {
-    let response = await fetch(`/concerts/${eventID}/purchases`, {
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/purchases`, {
       headers: {
         "Content-Type": "application/json"
       },

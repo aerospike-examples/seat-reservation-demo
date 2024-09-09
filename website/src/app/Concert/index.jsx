@@ -4,7 +4,8 @@ import { Navigate, useLoaderData, useLocation } from "react-router-dom";
 
 export const concertLoader = async (params) => {
     const { artist, id } = params;
-    let response = await fetch(`/concerts/${id}/seats`);
+    const apiUrl = import.meta.env.VITE_APP_API_URL;
+    let response = await fetch(`${apiUrl}/concerts/${id}/seats`);
     let seats = await response.json();
     return { artist, seats, id }
 }

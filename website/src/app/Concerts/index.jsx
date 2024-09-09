@@ -1,10 +1,10 @@
-import Artist from "../../components/Artist";
-import artists from "../../assets/artists.json";
-import styles from "./index.module.css";
 import { useLoaderData } from "react-router-dom";
+import Artist from "../../components/Artist";
+import styles from "./index.module.css";
 
 export const concertsLoader = async () => {
-    const response = await fetch("/concerts/getAll");
+  const apiUrl = import.meta.env.VITE_APP_API_URL;
+  const response = await fetch(`${apiUrl}/concerts/getAll`);
     const data = await response.json();
     const concerts = {}
     for(let concert of data) {
