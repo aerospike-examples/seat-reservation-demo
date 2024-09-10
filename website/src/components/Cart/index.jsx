@@ -39,7 +39,7 @@ const CartProvider = ({children}) => {
 
 	const getEventCart = async (eventID) => {
 		let { cartID } = getSessionCart(eventID);
-		fetch(`/concerts/${eventID}/shopping-carts/${cartID}`)
+		fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID}`)
 		.then(response => {
 			if(response.ok) {
 				return response.json()
