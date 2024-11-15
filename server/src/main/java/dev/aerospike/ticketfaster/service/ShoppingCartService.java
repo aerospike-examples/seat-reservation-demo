@@ -198,7 +198,7 @@ public class ShoppingCartService {
                 return seats;
             }
             catch (AerospikeException ae) {
-                if (ae.getResultCode() == ResultCode.TRAN_FAILED) {
+                if (ae.getResultCode() == ResultCode.TXN_FAILED) {
                     try {
                         Thread.sleep(ThreadLocalRandom.current().nextInt(10)+3);
                     } catch (InterruptedException ignored) {
@@ -207,7 +207,7 @@ public class ShoppingCartService {
                 lastException = ae;
             }
         }
-        if (lastException.getResultCode() == ResultCode.TRAN_FAILED) {
+        if (lastException.getResultCode() == ResultCode.TXN_FAILED) {
             throw new NotEnoughSeatsException(0, 0);
         }
         throw lastException;

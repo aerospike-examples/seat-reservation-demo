@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -119,7 +120,7 @@ public class ConcertController {
                 shoppingCart.setSeats(seats);
                 cartService.createShoppingCart(shoppingCart);
             }
-            return ResponseEntity.created(null).body(ShoppingCartCreateResponse.from(shoppingCart));
+            return ResponseEntity.status(HttpStatus.CREATED).body(ShoppingCartCreateResponse.from(shoppingCart));
         }
         catch (NotEnoughSeatsException nese) {
             return ResponseEntity.notFound().build();
@@ -145,7 +146,7 @@ public class ConcertController {
     // ## Add items to my Shopping Cart
     // POST /concerts/1234/shopping-carts/f7e1f2d4-8c3d-45e6-8d77-2d3e1c2b4f78/seats/a32
     @PostMapping("/concerts/{concertId}/shopping-carts/{cartId}/seats")
-    public ResponseEntity addSeatsToCart(
+    public ResponseEntity <?> addSeatsToCart(
                 @PathVariable String concertId, 
                 @PathVariable String cartId, 
                 @RequestBody ShoppingCartCreateRequest createRequest) {
@@ -178,7 +179,7 @@ public class ConcertController {
     // ## Remove items from my Shopping Cart
     // DELETE /concerts/1234/shopping-carts/f7e1f2d4-8c3d-45e6-8d77-2d3e1c2b4f78/seats/a32
     @DeleteMapping("/concerts/{concertId}/shopping-carts/{cartId}/seats")
-    public ResponseEntity removeSeatsFromCart(
+    public ResponseEntity <?> removeSeatsFromCart(
                 @PathVariable String concertId, 
                 @PathVariable String cartId, 
                 @RequestBody ShoppingCartCreateRequest createRequest) {
@@ -211,7 +212,7 @@ public class ConcertController {
     // ## Abandon / clear my Shopping Cart
     // DELETE /concerts/1234/shopping-carts/f7e1f2d4-8c3d-45e6-8d77-2d3e1c2b4f78
     @DeleteMapping("/concerts/{concertId}/shopping-carts/{cartId}")
-    public ResponseEntity clearCart(
+    public ResponseEntity <?> clearCart(
                 @PathVariable String concertId, 
                 @PathVariable String cartId) {
         
@@ -239,7 +240,7 @@ public class ConcertController {
     // POST /concerts/1234/purchases
     // - shoppping_cart=f7e1f2d4-8c3d-45e6-8d77-2d3e1c2b4f78
     @PostMapping("/concerts/{concertId}/purchases")
-    public ResponseEntity addSeatsToCart(
+    public ResponseEntity <?> addSeatsToCart(
                 @PathVariable String concertId, 
                 @RequestBody ShoppingCartCreateRequest createRequest) {
         

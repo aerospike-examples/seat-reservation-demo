@@ -23,7 +23,6 @@ import com.aerospike.client.Txn;
 import com.google.gson.Gson;
 
 import dev.aerospike.ticketfaster.model.Event;
-import dev.aerospike.ticketfaster.model.Seat;
 import dev.aerospike.ticketfaster.model.SeatStatus;
 import dev.aerospike.ticketfaster.model.Venue;
 
