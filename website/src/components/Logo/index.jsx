@@ -1,62 +1,60 @@
 import styles from "./index.module.css";
 import { useModal } from "../../hooks/useModal";
 import Modal from "../Modal";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
-import SimWorker from "../../worker?worker";
 
 const Logo = ({eventID, setSections, setVenueKey}) => {
     const apiUrl = import.meta.env.VITE_APP_API_URL;
+    const simUrl = import.meta.env.VITE_APP_SIM_URL;
+
     const { modalProps, ref, openModal, closeModal } = useModal();
-    const workers = useRef([]);
-    const isRunning = useRef(false);
+
     const [shortcuts, setShortcuts] = useState(false);
-    const [running, setRunning] = useState(false);
+    const [running, setRunning] = useState(true);
     const [numWorkers, setNumWorkers] = useState(50);
     const [seats, setSeats] = useState({min: 2, max: 5});
     const [delay, setDelay] = useState(2);
     const [abandon, setAbandon] = useState(15);
 
-    const runWorker = (idx, attempt = 0) => {
-        let { min, max } = seats;
-        workers.current[idx].postMessage({
-            idx,
-            delay,
-            seats: Math.floor(Math.random() * (1 + max - min)) + min,
-            abandon,
-            eventID,
-            attempt
-        });
-    }
-
-    const listenToWorker = (e) => {
-        const { status, idx } = e.data;
-        if(status === "Seats unavailable") return stopWorkers();
-        return runWorker(idx);
+    const getEventStatus = async () => {
+        fetch(`${simUrl}/simulate/event-status/${eventID}`)
+        .then(response => {
+            return response.json()
+        })
+        .then(({status}) => {
+            setRunning(status === "running")
+        })
+        .catch(err => console.log(err));
     }
 
     const startWorkers = async () => {
-        setRunning(true);
-        closeModal();
-        isRunning.current = true;
-        for(let i = 0; i < numWorkers; i++) {
-            if(isRunning.current){
-                workers.current.push(new SimWorker());
-                workers.current[i].addEventListener("message", listenToWorker);
-                runWorker(i);
-                await new Promise(r => setTimeout(r, 300))
-            }
-            else break;
-        }
+        fetch(`${simUrl}/simulate/start-workers/`, {
+            headers: {
+				"Content-Type": "application/json"
+			},
+			method: 'POST',
+			body: JSON.stringify({eventID, numWorkers, seats, delay, abandon})
+        })
+        .then(response => {
+            return response.json()
+        })
+        .then(({status}) => {
+            setRunning(status === "running");
+            closeModal();
+        })
+        .catch(err => console.log(err));
     }
 
     const stopWorkers = () => {
-        setRunning(false);
-        isRunning.current = false;
-        for(let i = 0; i < numWorkers; i++) {
-            workers.current[i]?.terminate();
-        }
-        workers.current = [];
+        fetch(`${simUrl}/simulate/stop-workers/${eventID}`)
+        .then(response => {
+            return response.json()
+        })
+        .then(({status}) => {
+            setRunning(status === "running")
+        })
+        .catch(err => console.log(err));
     }
 
     const resetEvent = async () => {
@@ -77,24 +75,28 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
     const handleKeys = useCallback((e) => {
         switch(e.code) {
             case "KeyS":
-                if(!isRunning.current) return startWorkers();
+                if(!running) return startWorkers();
                 break;
             case "KeyT":
-                if(isRunning.current) return stopWorkers();
+                if(!running) return stopWorkers();
                 break;
             case "KeyR":
-                if(!isRunning.current) return resetEvent();
+                if(!running) return resetEvent();
                 break;
             default:
                 return;
         }
-    },[]);
+    }, [running]);
 
     const toggleShortcuts = () => {
         setShortcuts(!shortcuts);
         if(!shortcuts) document.addEventListener("keydown", handleKeys);
         else document.removeEventListener("keydown", handleKeys);
     }
+
+    useEffect(() => {
+        getEventStatus();
+    }, []);
 
     return (
         <>
@@ -123,14 +125,14 @@ const Logo = ({eventID, setSections, setVenueKey}) => {
                             <span>Seat Min </span>
                             <div className={styles.input}>
                                 <span>{seats.min}</span>
-                                <input type="range" min={1} max={seats.max} value={seats.min} onChange={(e) => setSeats(prev => ({...prev, "min": e.currentTarget.value}))} disabled={running}/>
+                                <input type="range" min={1} max={seats?.max} value={seats?.min} onChange={(e) => setSeats(prev => ({...prev, min: e.target.value}))} disabled={running}/>
                             </div>
                         </label>
                         <label className={styles.option} title="Max value in range for random seat selection">
                             <span>Seat Max </span>
                             <div className={styles.input}>
                                 <span>{seats.max}</span>
-                                <input type="range" min={seats.min} max={20} value={seats.max} onChange={(e) => setSeats(prev => ({...prev, "max": e.currentTarget.value}))} disabled={running}/>
+                                <input type="range" min={seats?.min} max={20} value={seats?.max} onChange={(e) => setSeats(prev => ({...prev, max: e.target.value}))} disabled={running}/>
                             </div>
                         </label>
                         <label className={styles.option} title="Delay, in seconds, between adding to cart and purchase | abandon">
