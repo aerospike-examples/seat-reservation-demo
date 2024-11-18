@@ -29,7 +29,7 @@ const purchaseSeats = async (cartID, eventID) => {
 }
 
 const abandonSeats = async (cartID, eventID) => {
-    let response = await fetch(`${apiUrl}/${eventID}/shopping-carts/${cartID}`, {
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID}`, {
         method: 'DELETE'
     })
     if(response.ok) return

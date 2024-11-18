@@ -32,7 +32,8 @@ const Venue = ({sections, eventID}) => {
 		eventSource.current = new EventSource(`${apiUrl}/concerts/updates`);
 		eventSource.current.addEventListener(eventID, handleMessage);	
 		return () => {
-			eventSource.current.removeEventListener(eventID, handleMessage)
+			eventSource.current.removeEventListener(eventID, handleMessage);
+			eventSource.current.close();
 		}
    	}, [])
 

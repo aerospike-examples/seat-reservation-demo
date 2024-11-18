@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useShow } from "./useShow";
 
 //useModal is exported
-export const useModal = (danger = false, modalCallback = () => {}) => {
+export const useModal = (danger = false, openCallback = () => {}, closeCallback = () => {}) => {
     const [open, setOpen] = useState(false);
     
     const callback = () => {
         setTimeout(() => {
             setOpen(false);
-            modalCallback();
+            closeCallback();
         }, 300);
     };
     
@@ -16,6 +16,7 @@ export const useModal = (danger = false, modalCallback = () => {}) => {
 
     const openModal = () => {
         setOpen(true);
+        openCallback();
         setTimeout(() => setShow(true), 100);
     }
     const closeModal = () => {

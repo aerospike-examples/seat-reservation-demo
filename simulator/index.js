@@ -42,6 +42,7 @@ const stopWorkers = async (eventID) => {
 
 const listenToWorker = (data) => {
     const { status, idx, eventID } = data;
+    console.log(status);
     if(status === "Seats unavailable") return stopWorkers(eventID);
     return runWorker(eventID, idx);
 }

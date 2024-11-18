@@ -38,22 +38,24 @@ const CartProvider = ({children}) => {
 	}
 
 	const getEventCart = async (eventID) => {
-		let { cartID } = getSessionCart(eventID);
-		fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID}`)
-		.then(response => {
-			if(response.ok) {
-				return response.json()
-			}
-			throw new Error('Cart not found');
-		})
-		.then(({ seats }) => {
-			setSessionCart(seats, eventID);
-			setCartItems(seats);
-		})
-		.catch(() => {
-			setSessionCart([], eventID, true);
-			setCartItems([]);
-		});
+		let { cartID, newCart } = getSessionCart(eventID);
+		if(!newCart) {
+			fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID}`)
+			.then(response => {
+				if(response.ok) {
+					return response.json()
+				}
+				throw new Error('Cart not found');
+			})
+			.then(({ seats }) => {
+				setSessionCart(seats, eventID);
+				setCartItems(seats);
+			})
+			.catch(() => {
+				setSessionCart([], eventID, true);
+				setCartItems([]);
+			});
+		}
 	}
 
   	const addToCart = async (seatID, eventID, callback = () => {}) => {
