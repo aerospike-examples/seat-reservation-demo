@@ -14,18 +14,17 @@ public class NotifierService {
     public void sendMessage(String name, String message) {
         emitters.forEach(emitter -> {
             try {
-                System.out.printf("sending: %s->%s\n", name, message);
                 emitter.send(SseEmitter.event().name(name).data(message));
             }
             catch (IOException e) {
-                System.out.print(e);
                 emitter.complete();
             }
         });
     }
     
     public SseEmitter register() {
-        SseEmitter emitter = new SseEmitter();
+        SseEmitter emitter = new SseEmitter(-1L);
+        
         emitter.onCompletion(() -> emitters.remove(emitter));
         emitter.onTimeout(() -> emitter.complete());
         emitters.add(emitter);
