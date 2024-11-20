@@ -11,6 +11,7 @@
 }
 .aerospike {
     position: relative;
+    color: #000 !important;
 }
 .powered {
     font-size: 12px;
@@ -102,6 +103,10 @@
 .start:disabled {
     background-color: rgba(173, 255, 47, .6);
     color: gray;
+}
+.button:disabled:hover {
+    border-color: transparent;
+    cursor: default;
 }
 .shortcuts {
     display: flex;

@@ -3,11 +3,12 @@ import { useModal } from "../../hooks/useModal";
 import Modal from "../Modal";
 import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
+import { useNavigate } from "react-router-dom";
 
 const Header = ({eventID, setSections, setVenueKey}) => {
     const apiUrl = import.meta.env.VITE_APP_API_URL;
     const simUrl = import.meta.env.VITE_APP_SIM_URL;
-
+    const navigate = useNavigate();
     const [shortcuts, setShortcuts] = useState(false);
     const [running, setRunning] = useState(true);
     const [numWorkers, setNumWorkers] = useState(50);
@@ -72,6 +73,19 @@ const Header = ({eventID, setSections, setVenueKey}) => {
         setVenueKey(prev => prev + 1);
     }
 
+    const initEvents = async () => {
+        let response = await fetch(`${apiUrl}/rpc/init`, {
+			headers: {
+				"Content-Type": "application/json"
+			},
+			method: 'POST'
+        })
+        if(response.ok) {
+            closeModal();
+            navigate('/');
+        }
+    }
+
     const handleKeys = useCallback((e) => {
         switch(e.code) {
             case "KeyS":
@@ -100,20 +114,18 @@ const Header = ({eventID, setSections, setVenueKey}) => {
 
     return (
         <div className={styles.header}>
-            <div className={styles.aerospike}>
+            <a className={styles.aerospike} href="/">
                 <span className={styles.powered}>Powered by</span>
                 <img src="/Aerospike_logo.png" alt="Aerospike Logo" className={styles.logo} />
-            </div>
-            {eventID ?
-            <>
+            </a>
             <img src="/logo.png" alt="Ticketfaster Logo" className={styles.logo} onClick={openModal} />
             {modalProps.open &&
-                <Modal {...modalProps} ref={ref} title="Simulator">
+                <Modal {...modalProps} ref={ref} title="Demo Settings">
                     <div className={styles.container}>
                         <div className={styles.shortcuts}>
                             <span>Keybord shortcuts</span>
                             <div className={styles.shortcutControls}>
-                                <button className={styles.button} onClick={toggleShortcuts}>{shortcuts ? "Disable" : "Enable"}</button>
+                                <button className={styles.button} onClick={toggleShortcuts} disabled={!eventID}>{shortcuts ? "Disable" : "Enable"}</button>
                                 <span><kbd>s</kbd>tart</span>
                                 <span>s<kbd>t</kbd>op</span>
                                 <span><kbd>r</kbd>eset</span>    
@@ -124,35 +136,35 @@ const Header = ({eventID, setSections, setVenueKey}) => {
                                 <span>Workers </span>
                                 <div className={styles.input}>
                                     <span>{numWorkers}</span>
-                                    <input type="range" min={1} max={100} value={numWorkers} onChange={(e) => setNumWorkers(e.currentTarget.value)} disabled={running}/>
+                                    <input type="range" min={1} max={100} value={numWorkers} onChange={(e) => setNumWorkers(e.currentTarget.value)} disabled={running || !eventID}/>
                                 </div>
                             </label>
                             <label className={styles.option} title="Min value in range for random seat selection">
                                 <span>Seat Min </span>
                                 <div className={styles.input}>
                                     <span>{seats.min}</span>
-                                    <input type="range" min={1} max={seats?.max} value={seats?.min} onChange={(e) => setSeats(prev => ({...prev, min: e.target.value}))} disabled={running}/>
+                                    <input type="range" min={1} max={seats?.max} value={seats?.min} onChange={(e) => setSeats(prev => ({...prev, min: e.target.value}))} disabled={running || !eventID}/>
                                 </div>
                             </label>
                             <label className={styles.option} title="Max value in range for random seat selection">
                                 <span>Seat Max </span>
                                 <div className={styles.input}>
                                     <span>{seats.max}</span>
-                                    <input type="range" min={seats?.min} max={20} value={seats?.max} onChange={(e) => setSeats(prev => ({...prev, max: e.target.value}))} disabled={running}/>
+                                    <input type="range" min={seats?.min} max={20} value={seats?.max} onChange={(e) => setSeats(prev => ({...prev, max: e.target.value}))} disabled={running || !eventID}/>
                                 </div>
                             </label>
                             <label className={styles.option} title="Delay, in seconds, between adding to cart and purchase | abandon">
                                 <span>Delay </span>
                                 <div className={styles.input}>
                                     <span>{delay}s</span>
-                                    <input type="range" min={1} max={20} value={delay} onChange={(e) => setDelay(e.currentTarget.value)} disabled={running}/>
+                                    <input type="range" min={1} max={20} value={delay} onChange={(e) => setDelay(e.currentTarget.value)} disabled={running || !eventID}/>
                                 </div>
                             </label>
                             <label className={styles.option} title="Percent of abandoned carts">
                                 <span>Abandon </span>
                                 <div className={styles.input}>
                                     <span>{abandon}%</span>
-                                    <input type="range" min={1} max={100} value={abandon} onChange={(e) => setAbandon(e.currentTarget.value)} disabled={running}/>
+                                    <input type="range" min={1} max={100} value={abandon} onChange={(e) => setAbandon(e.currentTarget.value)} disabled={running || !eventID}/>
                                 </div>
                             </label>
                         </div>
@@ -162,14 +174,15 @@ const Header = ({eventID, setSections, setVenueKey}) => {
                                 :
                                 <button className={clsx(styles.button, styles.start)} onClick={startWorkers} disabled={!eventID}>Start</button>
                             }
-                            <button className={clsx(styles.button, styles.buttonSecondary)} onClick={resetEvent} disabled={!eventID || running}>Reset Event</button>
+                            {eventID ?
+                                <button className={clsx(styles.button, styles.buttonSecondary)} onClick={resetEvent} disabled={running}>Reset Event</button>
+                                :
+                                <button className={clsx(styles.button, styles.start)} onClick={initEvents}>Init Events</button>
+                            }
                         </div>
                     </div>
                 </Modal>
             }
-            </>
-            :
-            <img src="/logo.png" alt="Ticketfaster Logo" className={styles.logo} />}
         </div>
     )
 }
