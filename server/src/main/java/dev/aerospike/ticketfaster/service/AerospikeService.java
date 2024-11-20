@@ -107,7 +107,7 @@ public class AerospikeService {
             wp = client.copyWritePolicyDefault();
             wp.txn = txn;
         }
-        wp.sendKey = true;
+        if(wp != null) wp.sendKey = true;
         Key key = new Key(NAMESPACE, CUSTOMER_SET, customer.getId());
         client.put(wp, key, 
                 new Bin("dob", toAerospike(customer.getDateOfBirth())),

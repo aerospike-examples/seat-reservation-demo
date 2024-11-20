@@ -48,7 +48,7 @@ public class RpcController {
     // POST /rpc/resetConcert
     //-concert_id=1234
     @PostMapping("/resetConcert")
-    public ResponseEntity resetConcert(@RequestBody ResetConcertRequest resetConcertRequest) {
+    public ResponseEntity <?> resetConcert(@RequestBody ResetConcertRequest resetConcertRequest) {
         Optional<Event> event = eventService.loadEvent(resetConcertRequest.getConcertId());
         if (event.isPresent()) {
             eventService.clearAllSeats(event.get());

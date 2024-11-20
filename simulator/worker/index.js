@@ -1,6 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
+const { parentPort } = require('worker_threads');
+const { v4: uuidv4 } = require('uuid');
 
-const apiUrl = import.meta.env.VITE_APP_API_URL;
+const apiUrl = "http://localhost:8080";
 const sleep = (seconds) =>  new Promise(r => setTimeout(r, seconds * 1000))
 
 const addToCart = async (cartID, numSeats, eventID) => {
@@ -28,7 +29,7 @@ const purchaseSeats = async (cartID, eventID) => {
 }
 
 const abandonSeats = async (cartID, eventID) => {
-    let response = await fetch(`${apiUrl}/${eventID}/shopping-carts/${cartID}`, {
+    let response = await fetch(`${apiUrl}/concerts/${eventID}/shopping-carts/${cartID}`, {
         method: 'DELETE'
     })
     if(response.ok) return
@@ -60,11 +61,11 @@ const simulateUser = async (delay, seats, abandon, eventID) => {
     });
 }
 
-self.onmessage = async (e) => {
-    const { idx, delay, seats, abandon, eventID } = e.data;
+parentPort.on("message", (data) => {
+    const { idx, delay, seats, abandon, eventID } = data;
     simulateUser(delay, seats, abandon, eventID)
     .then(
-        () => self.postMessage({status: "ok", idx}),
-        (err) => self.postMessage({status: err.message, idx})
+        () => parentPort.postMessage({status: "ok", idx, eventID}),
+        (err) => parentPort.postMessage({status: err.message, idx, eventID})
     );
-};
+})

@@ -1,4 +1,5 @@
 import Artist from "../../components/Artist";
+import Header from "../../components/Header";
 import styles from "./index.module.css";
 import { useLoaderData } from "react-router-dom";
 
@@ -21,7 +22,7 @@ const Concerts = () => {
 
     return (
         <>
-        <img src="/logo.png" alt="Ticketfaster Logo" className={styles.logo} />
+        <Header />
         <h1 style={{marginBottom: "30px"}}>Upcoming Concerts</h1>
         <div className={styles.concertList}>
           {Object.keys(concerts).map(artist => (

@@ -1,9 +1,25 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 .logo {
     display: block;
-    margin-left: auto;
     width: 180px;
     height: auto;
     opacity: 0.75;
+}
+.aerospike {
+    position: relative;
+}
+.powered {
+    font-size: 12px;
+    position: absolute;
+    left: 34px;
+    top: -7px;
+}
+.aerospike > .logo {
+    opacity: 1;
 }
 .container {
     display: flex;

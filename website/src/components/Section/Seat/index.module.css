@@ -14,6 +14,7 @@
 
 .seatAvailable {
     fill: #00A3E0;
+    cursor: pointer;
 }
 
 .seatInCart {
@@ -22,6 +23,7 @@
 
 .seatInYourCart {
     fill: #FF4081;
+    cursor: pointer;
 }
 
 .seatSold {

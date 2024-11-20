@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Logo from "../../components/Logo";
+import Header from "../../components/Header";
 import Venue from "../../components/Venue";
 import styles from "./index.module.css";
 import { Navigate, useLoaderData, useLocation } from "react-router-dom";
@@ -22,7 +22,7 @@ const Concert = () => {
 
     return (
         <>
-        <Logo eventID={eventID} setSections={setSections} setVenueKey={setVenueKey}/>
+        <Header eventID={eventID} setSections={setSections} setVenueKey={setVenueKey}/>
         <div className={styles.concertHeader}>
             <h1>{artist}: {title}</h1>
             <div className={styles.concertHeaderDetails}>
