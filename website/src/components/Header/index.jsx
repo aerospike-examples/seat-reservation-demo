@@ -162,7 +162,7 @@ const Header = ({eventID, setSections, setVenueKey}) => {
                                 :
                                 <button className={clsx(styles.button, styles.start)} onClick={startWorkers} disabled={!eventID}>Start</button>
                             }
-                            <button className={clsx(styles.button, styles.buttonSecondary)} onClick={resetEvent} disabled={!eventID}>Reset Event</button>
+                            <button className={clsx(styles.button, styles.buttonSecondary)} onClick={resetEvent} disabled={!eventID || running}>Reset Event</button>
                         </div>
                     </div>
                 </Modal>
