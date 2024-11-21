@@ -13,11 +13,13 @@ public class NotifierService {
 
     public void sendMessage(String name, String message) {
         emitters.forEach(emitter -> {
-            try {
-                emitter.send(SseEmitter.event().name(name).data(message));
-            }
-            catch (IOException e) {
-                emitter.complete();
+            synchronized (emitter) {
+                try {
+                    emitter.send(SseEmitter.event().name(name).data(message));
+                }
+                catch (IOException e) {
+                    emitter.complete();
+                }
             }
         });
     }
